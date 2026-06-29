@@ -7,48 +7,48 @@
 
     <title>قلمروستان</title>
 
+    <meta name="description" content="قلمروستان - بازی استراتژیک آنلاین">
+
+    <link rel="icon" href="assets/images/favicon.png">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
     <!-- صفحه بارگذاری -->
-    <div id="loading">
+    <div id="loading-screen">
         <h1>🏰 قلمروستان</h1>
         <p>در حال بارگذاری...</p>
     </div>
 
-    <!-- صفحه اصلی بازی -->
+    <!-- رابط بازی -->
     <div id="game">
 
         <!-- نوار بالا -->
-        <header id="topBar">
+        <header id="top-bar">
 
-            <div class="logo">
+            <div id="logo">
                 🏰 قلمروستان
             </div>
 
-            <div class="resources">
-                👥 نیرو:
-                <span id="troops">0</span>
-
-                &nbsp;&nbsp;
-
-                🏆 قلمرو:
-                <span id="land">1</span>
+            <div id="resource-bar">
+                <span id="gold">💰 0</span>
+                <span id="troops">👥 0</span>
+                <span id="population">🏠 0</span>
             </div>
 
         </header>
 
-        <!-- نقشه -->
-        <main>
+        <!-- بخش اصلی -->
+        <main id="game-area">
 
-            <canvas id="gameCanvas"></canvas>
+            <canvas id="game-canvas"></canvas>
 
         </main>
 
     </div>
 
+    <!-- اسکریپت‌ها -->
     <script src="js/main.js"></script>
 
 </body>
