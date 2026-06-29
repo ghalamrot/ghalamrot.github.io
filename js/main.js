@@ -1,41 +1,27 @@
+// ============================
+// قلمروستان
+// Main.js
+// نسخه 1.0
+// ============================
+
+import { initMap } from "./map.js";
+import { startRenderer } from "./render.js";
+import { initInput } from "./input.js";
+
 // عناصر صفحه
-const loading = document.getElementById("loading");
+const loadingScreen = document.getElementById("loading-screen");
 const game = document.getElementById("game");
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
 
-// تنظیم اندازه Canvas
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight - 60;
-}
+// شروع بازی
+window.addEventListener("load", () => {
 
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-
-// پایان بارگذاری
-setTimeout(() => {
-    loading.style.display = "none";
+    // نمایش بازی
+    loadingScreen.style.display = "none";
     game.style.display = "block";
 
-    drawMap();
-}, 1200);
+    // راه‌اندازی بخش‌ها
+    initMap();
+    startRenderer();
+    initInput();
 
-// رسم اولین نقشه
-function drawMap() {
-
-    // آسمان
-    ctx.fillStyle = "#4fa8ff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // زمین
-    ctx.fillStyle = "#3fa34d";
-    ctx.fillRect(0, canvas.height - 120, canvas.width, 120);
-
-    // عنوان
-    ctx.fillStyle = "white";
-    ctx.font = "bold 40px Tahoma";
-    ctx.textAlign = "center";
-    ctx.fillText("قلمروستان", canvas.width / 2, 80);
-
-}
+});
