@@ -3,33 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>قلم‌رُستان - بازی استراتژی تاریخی</title>
+    <title>⚔️ قلم‌رُستان - بازی استراتژی تاریخی</title>
+    
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700;900&display=swap" rel="stylesheet">
+    
     <style>
+        /* ============================================================
+           RESET & BASE
+           ============================================================ */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        
         body {
             font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #0a0a1a;
             overflow: hidden;
             height: 100vh;
             color: #fff;
+            user-select: none;
         }
+        
+        /* ============================================================
+           GAME CONTAINER
+           ============================================================ */
         #game-container {
             width: 100vw;
             height: 100vh;
             position: relative;
             background: #0a0a1a;
         }
+        
         #gameCanvas {
             width: 100%;
             height: 100%;
             display: block;
             background: #0a0a1a;
-            cursor: pointer;
+            cursor: grab;
         }
+        
+        #gameCanvas:active {
+            cursor: grabbing;
+        }
+        
+        /* ============================================================
+           UI OVERLAY
+           ============================================================ */
         #ui-overlay {
             position: absolute;
             top: 0;
@@ -38,10 +60,14 @@
             height: 100%;
             pointer-events: none;
         }
+        
         #ui-overlay > * {
             pointer-events: all;
         }
-        /* Top Bar */
+        
+        /* ============================================================
+           TOP BAR
+           ============================================================ */
         #topbar {
             position: absolute;
             top: 10px;
@@ -53,139 +79,264 @@
             display: flex;
             align-items: center;
             padding: 0 20px;
-            gap: 15px;
-            backdrop-filter: blur(10px);
+            gap: 12px;
+            backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 215, 0, 0.15);
             z-index: 100;
             font-size: 13px;
             overflow-x: auto;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         }
+        
         .topbar-item {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             color: #ccc;
             white-space: nowrap;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background 0.3s;
         }
+        
+        .topbar-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
         .topbar-item .icon {
             font-size: 18px;
         }
+        
         .topbar-item .value {
             font-weight: bold;
             color: #fff;
+            font-size: 14px;
         }
+        
         .topbar-divider {
             width: 1px;
             height: 30px;
-            background: rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.1);
         }
+        
         .topbar-title {
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 20px;
+            font-weight: 900;
             color: #ffd700;
-            margin-right: 10px;
+            margin-right: 5px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
         }
-        /* Sidebar */
+        
+        .topbar-title .sub {
+            font-size: 11px;
+            color: #888;
+            font-weight: 400;
+            margin-right: 5px;
+        }
+        
+        /* ============================================================
+           SIDEBAR
+           ============================================================ */
         #sidebar {
             position: absolute;
             top: 80px;
             right: 10px;
-            width: 260px;
+            width: 280px;
             max-height: calc(100vh - 160px);
             background: rgba(0, 0, 0, 0.88);
             border-radius: 12px;
-            padding: 15px;
-            backdrop-filter: blur(10px);
+            padding: 18px;
+            backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 215, 0, 0.1);
             overflow-y: auto;
             z-index: 90;
-            transition: transform 0.3s ease;
-            font-size: 13px;
-            display: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(320px);
+            opacity: 0;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
         }
+        
         #sidebar.show {
-            display: block;
+            transform: translateX(0);
+            opacity: 1;
         }
+        
         #sidebar.hidden {
-            transform: translateX(300px);
-            display: none;
+            transform: translateX(320px);
+            opacity: 0;
         }
+        
         .sidebar-title {
-            font-size: 17px;
-            font-weight: bold;
+            font-size: 18px;
+            font-weight: 700;
             margin-bottom: 12px;
             color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+        
+        .sidebar-title .badge {
+            font-size: 11px;
+            background: rgba(255, 215, 0, 0.15);
+            padding: 2px 10px;
+            border-radius: 12px;
+            color: #aaa;
+        }
+        
         .sidebar-info {
-            line-height: 1.9;
+            line-height: 2;
             color: #ddd;
+            font-size: 13px;
         }
+        
         .sidebar-info .label {
             color: #888;
+            font-size: 12px;
         }
+        
+        .sidebar-info .value-highlight {
+            color: #ffd700;
+            font-weight: bold;
+        }
+        
+        .sidebar-info .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        
+        .sidebar-actions {
+            margin-top: 14px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        
         .sidebar-btn {
-            padding: 6px 12px;
-            margin: 3px;
-            background: rgba(255,215,0,0.15);
-            border: 1px solid rgba(255,215,0,0.3);
+            padding: 6px 14px;
+            background: rgba(255, 215, 0, 0.08);
+            border: 1px solid rgba(255, 215, 0, 0.2);
             color: #fff;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 12px;
             cursor: pointer;
             transition: all 0.3s;
             font-family: inherit;
+            flex: 1;
+            min-width: 60px;
+            text-align: center;
         }
+        
         .sidebar-btn:hover {
-            background: rgba(255,215,0,0.3);
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #ffd700;
+            transform: translateY(-1px);
         }
-        /* Minimap */
+        
+        .sidebar-btn:active {
+            transform: translateY(0);
+        }
+        
+        .sidebar-btn.danger {
+            border-color: rgba(239, 83, 80, 0.3);
+            color: #ef5350;
+        }
+        
+        .sidebar-btn.danger:hover {
+            background: rgba(239, 83, 80, 0.15);
+        }
+        
+        /* ============================================================
+           MINIMAP
+           ============================================================ */
         #minimap {
             position: absolute;
             bottom: 20px;
             left: 20px;
-            width: 140px;
-            height: 140px;
-            background: rgba(0, 0, 0, 0.75);
+            width: 150px;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.8);
             border-radius: 10px;
-            border: 2px solid rgba(255,215,0,0.2);
+            border: 2px solid rgba(255, 215, 0, 0.15);
             overflow: hidden;
             z-index: 80;
             cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
+        
+        #minimap:hover {
+            border-color: rgba(255, 215, 0, 0.3);
+            transform: scale(1.02);
+        }
+        
         #minimap canvas {
             width: 100%;
             height: 100%;
+            display: block;
         }
-        /* Notifications */
+        
+        /* ============================================================
+           NOTIFICATIONS
+           ============================================================ */
         #notifications {
             position: absolute;
             bottom: 20px;
             right: 20px;
-            width: 280px;
+            width: 300px;
             z-index: 200;
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
+        
         .notification {
             background: rgba(0, 0, 0, 0.92);
-            border-radius: 8px;
-            padding: 10px 14px;
-            border-right: 3px solid #ffd700;
-            animation: slideIn 0.3s ease;
-            backdrop-filter: blur(5px);
+            border-radius: 10px;
+            padding: 12px 16px;
+            border-right: 4px solid #ffd700;
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(8px);
             font-size: 13px;
             transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
+        
         .notification.info { border-right-color: #4fc3f7; }
         .notification.success { border-right-color: #66bb6a; }
         .notification.warning { border-right-color: #ffa726; }
         .notification.error { border-right-color: #ef5350; }
-        @keyframes slideIn {
-            from { transform: translateX(80px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        .notification.battle { border-right-color: #ff6b6b; }
+        .notification.economy { border-right-color: #4ecdc4; }
+        
+        .notification .time {
+            font-size: 10px;
+            color: #666;
+            margin-right: 8px;
         }
-        /* Menu */
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .notification.fade-out {
+            opacity: 0;
+            transform: translateX(50px);
+        }
+        
+        /* ============================================================
+           MENU OVERLAY
+           ============================================================ */
         #menu-overlay {
             position: absolute;
             top: 0;
@@ -197,327 +348,364 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
         }
+        
         #menu-overlay.active {
             display: flex;
         }
+        
         .menu-panel {
-            background: rgba(20, 20, 40, 0.95);
-            border-radius: 16px;
-            padding: 40px;
-            max-width: 420px;
+            background: rgba(15, 15, 35, 0.95);
+            border-radius: 20px;
+            padding: 45px;
+            max-width: 440px;
             width: 90%;
-            border: 1px solid rgba(255,215,0,0.2);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+            animation: menuPop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        
+        @keyframes menuPop {
+            from {
+                transform: scale(0.9) translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+        
         .menu-title {
-            font-size: 32px;
+            font-size: 36px;
             text-align: center;
             color: #ffd700;
-            margin-bottom: 30px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-shadow: 0 0 40px rgba(255, 215, 0, 0.15);
         }
+        
         .menu-subtitle {
             text-align: center;
             color: #888;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
             font-size: 14px;
+            letter-spacing: 3px;
         }
+        
         .menu-btn {
             display: block;
             width: 100%;
-            padding: 12px;
-            margin: 6px 0;
-            background: rgba(255,215,0,0.08);
-            border: 1px solid rgba(255,215,0,0.2);
+            padding: 14px;
+            margin: 7px 0;
+            background: rgba(255, 215, 0, 0.06);
+            border: 1px solid rgba(255, 215, 0, 0.15);
             color: #fff;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 15px;
             cursor: pointer;
             transition: all 0.3s;
             font-family: inherit;
+            text-align: center;
         }
+        
         .menu-btn:hover {
-            background: rgba(255,215,0,0.18);
+            background: rgba(255, 215, 0, 0.12);
             border-color: #ffd700;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.1);
         }
+        
+        .menu-btn:active {
+            transform: translateY(0);
+        }
+        
         .menu-btn.primary {
             background: #ffd700;
             color: #1a1a1a;
-            font-weight: bold;
+            font-weight: 700;
+            border-color: #ffd700;
         }
+        
         .menu-btn.primary:hover {
             background: #ffe44d;
+            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.3);
         }
+        
         .menu-btn.danger {
-            border-color: rgba(239,83,80,0.3);
+            border-color: rgba(239, 83, 80, 0.3);
             color: #ef5350;
         }
+        
         .menu-btn.danger:hover {
-            background: rgba(239,83,80,0.15);
+            background: rgba(239, 83, 80, 0.12);
         }
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,215,0,0.5); }
-        /* Responsive */
+        
+        .menu-btn .shortcut {
+            font-size: 11px;
+            color: #666;
+            margin-right: 10px;
+        }
+        
+        .menu-setting {
+            margin: 12px 0;
+            color: #ccc;
+        }
+        
+        .menu-setting label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .menu-setting input[type="range"] {
+            width: 60%;
+            accent-color: #ffd700;
+            background: transparent;
+        }
+        
+        .menu-setting select {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 13px;
+        }
+        
+        .menu-setting .value-display {
+            color: #ffd700;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        /* ============================================================
+           LOADING SCREEN
+           ============================================================ */
+        #loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        #loading.hidden {
+            display: none;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 215, 0, 0.1);
+            border-top-color: #ffd700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: #888;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+        
+        .loading-text .highlight {
+            color: #ffd700;
+        }
+        
+        /* ============================================================
+           SCROLLBAR
+           ============================================================ */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 215, 0, 0.25);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 215, 0, 0.4);
+        }
+        
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
         @media (max-width: 768px) {
-            #topbar { height: 48px; padding: 0 10px; gap: 8px; font-size: 11px; top: 5px; left: 5px; right: 5px; }
-            .topbar-title { font-size: 14px; }
-            #sidebar { width: 200px; right: 5px; top: 60px; font-size: 12px; padding: 10px; }
-            #minimap { width: 100px; height: 100px; bottom: 10px; left: 10px; }
-            #notifications { width: 200px; bottom: 10px; right: 10px; }
-            .menu-panel { padding: 25px; }
-            .menu-title { font-size: 24px; }
+            #topbar {
+                height: 50px;
+                padding: 0 10px;
+                gap: 6px;
+                font-size: 11px;
+                top: 5px;
+                left: 5px;
+                right: 5px;
+                border-radius: 8px;
+            }
+            
+            .topbar-title {
+                font-size: 15px;
+            }
+            .topbar-title .sub {
+                display: none;
+            }
+            .topbar-item .icon {
+                font-size: 14px;
+            }
+            .topbar-item .value {
+                font-size: 12px;
+            }
+            .topbar-divider {
+                height: 20px;
+            }
+            
+            #sidebar {
+                width: 220px;
+                right: 5px;
+                top: 62px;
+                font-size: 12px;
+                padding: 12px;
+                max-height: calc(100vh - 130px);
+                border-radius: 8px;
+            }
+            
+            #minimap {
+                width: 100px;
+                height: 100px;
+                bottom: 10px;
+                left: 10px;
+                border-radius: 8px;
+            }
+            
+            #notifications {
+                width: 200px;
+                bottom: 10px;
+                right: 10px;
+            }
+            
+            .notification {
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+            
+            .menu-panel {
+                padding: 25px;
+            }
+            
+            .menu-title {
+                font-size: 26px;
+            }
+            
+            .menu-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #topbar {
+                height: 42px;
+                padding: 0 6px;
+                gap: 4px;
+                font-size: 10px;
+            }
+            
+            .topbar-title {
+                font-size: 12px;
+            }
+            .topbar-item {
+                padding: 2px 4px;
+            }
+            .topbar-item .icon {
+                font-size: 12px;
+            }
+            .topbar-item .value {
+                font-size: 10px;
+            }
+            
+            #sidebar {
+                width: 180px;
+                right: 3px;
+                top: 52px;
+                font-size: 11px;
+                padding: 8px;
+                max-height: calc(100vh - 110px);
+            }
+            
+            #minimap {
+                width: 70px;
+                height: 70px;
+                bottom: 5px;
+                left: 5px;
+            }
+            
+            #notifications {
+                width: 150px;
+                bottom: 5px;
+                right: 5px;
+            }
+            
+            .menu-panel {
+                padding: 20px;
+            }
+            
+            .menu-title {
+                font-size: 22px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- ============================================================
+    LOADING SCREEN
+    ============================================================ -->
+    <div id="loading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">
+            <span class="highlight">⚔️</span> در حال بارگذاری قلم‌رُستان <span class="highlight">⚔️</span>
+        </div>
+    </div>
+    
+    <!-- ============================================================
+    GAME CONTAINER
+    ============================================================ -->
     <div id="game-container">
+        <!-- Canvas -->
         <canvas id="gameCanvas"></canvas>
+        
+        <!-- UI Overlay -->
         <div id="ui-overlay">
             <!-- Top Bar -->
             <div id="topbar">
-                <span class="topbar-title">⚔️ قلم‌رُستان</span>
+                <span class="topbar-title">
+                    ⚔️ قلم‌رُستان
+                    <span class="sub">| استراتژی</span>
+                </span>
                 <span class="topbar-divider"></span>
                 <span class="topbar-item">
                     <span class="icon">👑</span>
                     <span class="value" id="playerName">بازیکن</span>
                 </span>
-                <span class="topbar-divider"></span>
-                <span class="topbar-item">
-                    <span class="icon">💰</span>
-                    <span class="value" id="goldDisplay">100</span>
-                </span>
-                <span class="topbar-divider"></span>
-                <span class="topbar-item">
-                    <span class="icon">⚔️</span>
-                    <span class="value" id="armyDisplay">10</span>
-                </span>
-                <span class="topbar-divider"></span>
-                <span class="topbar-item">
-                    <span class="icon">🏛️</span>
-                    <span class="value" id="provinceCount">0</span>
-                </span>
-                <span class="topbar-divider"></span>
-                <span class="topbar-item">
-                    <span class="icon">⏱️</span>
-                    <span class="value" id="timeDisplay">0s</span>
-                </span>
-                <span style="flex:1;"></span>
-                <span class="topbar-item" style="font-size:11px;color:#666;" id="fpsDisplay">FPS: 0</span>
-            </div>
-            
-            <!-- Sidebar -->
-            <div id="sidebar">
-                <div class="sidebar-title" id="sidebarTitle">استان</div>
-                <div class="sidebar-info" id="sidebarContent">
-                    <div><span class="label">مالک:</span> <span id="provOwner">-</span></div>
-                    <div><span class="label">جمعیت:</span> <span id="provPopulation">-</span></div>
-                    <div><span class="label">سرباز:</span> <span id="provArmy">-</span></div>
-                    <div><span class="label">درآمد:</span> <span id="provIncome">-</span></div>
-                    <div><span class="label">دفاع:</span> <span id="provDefense">-</span></div>
-                    <div><span class="label">همسایه‌ها:</span> <span id="provNeighbors">-</span></div>
-                </div>
-                <div id="sidebarActions" style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap;"></div>
-            </div>
-            
-            <!-- Minimap -->
-            <div id="minimap">
-                <canvas id="minimapCanvas"></canvas>
-            </div>
-            
-            <!-- Notifications -->
-            <div id="notifications"></div>
-            
-            <!-- Menu Overlay -->
-            <div id="menu-overlay">
-                <div class="menu-panel">
-                    <div class="menu-title">⚔️ قلم‌رُستان</div>
-                    <div class="menu-subtitle">بازی استراتژی تاریخی</div>
-                    <button class="menu-btn primary" data-action="start">🚀 شروع بازی</button>
-                    <button class="menu-btn" data-action="random">🎲 نقشه تصادفی</button>
-                    <button class="menu-btn" data-action="settings">⚙️ تنظیمات</button>
-                    <button class="menu-btn" data-action="about">📖 درباره</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // ============================================================
-        // ====================== EVENT BUS =============================
-        // ============================================================
-        class EventBus {
-            constructor() {
-                this.events = new Map();
-                this.onceEvents = new Map();
-            }
-            on(event, callback) {
-                if (!this.events.has(event)) this.events.set(event, new Set());
-                this.events.get(event).add(callback);
-            }
-            off(event, callback) {
-                if (this.events.has(event)) this.events.get(event).delete(callback);
-            }
-            once(event, callback) {
-                if (!this.onceEvents.has(event)) this.onceEvents.set(event, new Set());
-                this.onceEvents.get(event).add(callback);
-            }
-            emit(event, data) {
-                if (this.events.has(event)) {
-                    for (const cb of this.events.get(event)) try { cb(data); } catch(e) { console.error(e); }
-                }
-                if (this.onceEvents.has(event)) {
-                    for (const cb of this.onceEvents.get(event)) try { cb(data); } catch(e) { console.error(e); }
-                    this.onceEvents.delete(event);
-                }
-            }
-        }
-
-        // ============================================================
-        // ====================== GAME STATE ===========================
-        // ============================================================
-        class GameState {
-            constructor() {
-                this.gameStarted = false;
-                this.gamePaused = false;
-                this.turn = 0;
-                this.time = 0;
-                this.players = [];
-                this.provinces = [];
-                this.units = [];
-                this.selectedProvince = null;
-                this.hoveredProvince = null;
-                this.currentPlayerIndex = 0;
-                this.humanPlayerIndex = 0;
-                this.settings = {
-                    numPlayers: 4,
-                    difficulty: 'normal',
-                    mapSize: 30
-                };
-                this.colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#00b894', '#e17055', '#0984e3'];
-            }
-            
-            getCurrentPlayer() { return this.players[this.currentPlayerIndex]; }
-            getHumanPlayer() { return this.players[this.humanPlayerIndex]; }
-            getPlayerById(id) { return this.players.find(p => p.id === id); }
-            getProvince(id) { return this.provinces.find(p => p.id === id); }
-            getProvincesByOwner(playerId) { return this.provinces.filter(p => p.ownerId === playerId); }
-            
-            initializePlayers() {
-                this.players = [];
-                const num = this.settings.numPlayers || 4;
-                const names = ['بازیکن', 'عثمانی', 'روسیه', 'مغولستان', 'چین', 'هند', 'ژاپن', 'ایران'];
-                for (let i = 0; i < num; i++) {
-                    this.players.push({
-                        id: i,
-                        name: names[i] || `کشور ${i+1}`,
-                        color: this.colors[i % this.colors.length],
-                        isHuman: i === 0,
-                        gold: 100 + Math.floor(Math.random() * 50),
-                        army: 10 + Math.floor(Math.random() * 10),
-                        provinces: [],
-                        diplomacy: {}
-                    });
-                }
-                this.humanPlayerIndex = 0;
-                this.currentPlayerIndex = 0;
-            }
-        }
-
-        // ============================================================
-        // ====================== PROVINCE =============================
-        // ============================================================
-        class Province {
-            constructor(data) {
-                this.id = data.id || Math.random();
-                this.name = data.name || `استان ${this.id}`;
-                this.center = data.center || { x: Math.random()*600+100, y: Math.random()*400+100 };
-                this.radius = data.radius || 25 + Math.random()*20;
-                this.ownerId = data.ownerId || null;
-                this.population = data.population || 1000 + Math.floor(Math.random()*4000);
-                this.goldPerTurn = data.goldPerTurn || 1 + Math.floor(Math.random()*3);
-                this.army = data.army || 0;
-                this.maxArmy = data.maxArmy || 10;
-                this.defense = data.defense || 1;
-                this.neighbors = data.neighbors || [];
-                this.buildings = data.buildings || [];
-                this.color = data.color || '#666';
-                this.flashTimer = 0;
-            }
-            getColor() {
-                if (this.ownerId !== null) {
-                    const state = window.game?.state;
-                    const player = state?.getPlayerById(this.ownerId);
-                    return player?.color || '#888';
-                }
-                return '#444';
-            }
-            flash(duration = 0.5) { this.flashTimer = duration; }
-            update(dt) { if (this.flashTimer > 0) this.flashTimer -= dt; }
-            isFlashing() { return this.flashTimer > 0; }
-            getFlashValue() { return this.isFlashing() ? Math.sin(this.flashTimer * 20) * 0.3 + 0.7 : 1; }
-        }
-
-        // ============================================================
-        // ====================== CAMERA ===============================
-        // ============================================================
-        class Camera {
-            constructor() {
-                this.x = 0; this.y = 0; this.zoom = 1;
-                this.targetX = 0; this.targetY = 0; this.targetZoom = 1;
-                this.width = 0; this.height = 0;
-                this.minZoom = 0.3; this.maxZoom = 3;
-                this.dragging = false;
-                this.dragStartX = 0; this.dragStartY = 0;
-                this.dragStartCamX = 0; this.dragStartCamY = 0;
-            }
-            init(canvas) {
-                this.width = canvas.width;
-                this.height = canvas.height;
-                this.x = this.width/2; this.y = this.height/2;
-                this.targetX = this.x; this.targetY = this.y;
-            }
-            update() {
-                this.x += (this.targetX - this.x) * 0.08;
-                this.y += (this.targetY - this.y) * 0.08;
-                this.zoom += (this.targetZoom - this.zoom) * 0.08;
-                this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoom));
-            }
-            moveTo(x, y) { this.targetX = x; this.targetY = y; }
-            moveBy(dx, dy) { this.targetX += dx; this.targetY += dy; }
-            zoomTo(z, cx, cy) {
-                if (cx === undefined) cx = this.width/2;
-                if (cy === undefined) cy = this.height/2;
-                const old = this.zoom;
-                this.targetZoom = Math.max(this.minZoom, Math.min(this.maxZoom, z));
-                const ratio = this.targetZoom / old;
-                this.targetX = cx - (cx - this.x) * ratio;
-                this.targetY = cy - (cy - this.y) * ratio;
-            }
-            screenToWorld(sx, sy) {
-                return { x: (sx - this.x) / this.zoom + this.x, y: (sy - this.y) / this.zoom + this.y };
-            }
-            worldToScreen(wx, wy) {
-                return { x: (wx - this.x) * this.zoom + this.x, y: (wy - this.y) * this.zoom + this.y };
-            }
-            startDrag(x, y) {
-                this.dragging = true;
-                this.dragStartX = x; this.dragStartY = y;
-                this.dragStartCamX = this.x; this.dragStartCamY = this.y;
-            }
-            dragTo(x, y) {
-                if (!this.dragging) return;
-                const dx = x - this.dragStartX;
-                const dy = y - this.dragStartY;
-                this.targetX = this.dragStartCamX - dx / this.zoom;
-                this.targetY = this.dragStartCamY - dy / this.zoom;
-            }
-            endDrag() { this.dragging = false; }
-        }
-
-        // ============================================================
-        // ================
+          
