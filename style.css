@@ -1,102 +1,307 @@
-/* ===========================
-   قلمروستان - Style.css
-   نسخه 1.0
-=========================== */
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-html,
-body{
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    direction:rtl;
-    font-family:Tahoma,Arial,sans-serif;
-    background:#1c2431;
-    color:#fff;
+body {
+    font-family: 'Vazirmatn', sans-serif;
+    background: #1a1a1a;
+    overflow: hidden;
+    height: 100vh;
+    color: #fff;
 }
 
-/* صفحه بارگذاری */
-
-#loading-screen{
-    position:fixed;
-    inset:0;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    gap:15px;
-    background:#111827;
-    z-index:9999;
+#game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    background: #0a0a1a;
 }
 
-#loading-screen h1{
-    font-size:48px;
+#gameCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: #0a0a1a;
 }
 
-#loading-screen p{
-    font-size:18px;
-    color:#cfcfcf;
+#ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
 }
 
-/* صفحه بازی */
-
-#game{
-    display:none;
-    width:100%;
-    height:100%;
+#ui-overlay > * {
+    pointer-events: all;
 }
 
-/* نوار بالا */
-
-#top-bar{
-    width:100%;
-    height:64px;
-    background:#243244;
-    border-bottom:2px solid #415a77;
-
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-
-    padding:0 20px;
+/* Top Bar Styles */
+#topbar {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 100;
 }
 
-#logo{
-    font-size:28px;
-    font-weight:bold;
+.topbar-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #ccc;
 }
 
-#resource-bar{
-    display:flex;
-    gap:25px;
-    font-size:18px;
+.topbar-item .icon {
+    font-size: 20px;
 }
 
-/* بخش بازی */
-
-#game-area{
-    width:100%;
-    height:calc(100% - 64px);
-    position:relative;
+.topbar-item .value {
+    font-weight: bold;
+    color: #fff;
 }
 
-/* بوم بازی */
-
-#game-canvas{
-    width:100%;
-    height:100%;
-    display:block;
-    background:#7cc7ff;
+.topbar-divider {
+    width: 1px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.2);
 }
 
-/* جلوگیری از انتخاب متن */
-
-*{
-    user-select:none;
-    -webkit-user-select:none;
+/* Sidebar Styles */
+#sidebar {
+    position: absolute;
+    top: 80px;
+    right: 10px;
+    width: 280px;
+    max-height: calc(100vh - 160px);
+    background: rgba(0, 0, 0, 0.85);
+    border-radius: 10px;
+    padding: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-y: auto;
+    z-index: 90;
+    transition: transform 0.3s ease;
 }
+
+#sidebar.hidden {
+    transform: translateX(300px);
+}
+
+.sidebar-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #ffd700;
+}
+
+.sidebar-info {
+    font-size: 13px;
+    line-height: 1.8;
+    color: #ddd;
+}
+
+.sidebar-info .label {
+    color: #888;
+}
+
+/* Minimap Styles */
+#minimap {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 150px;
+    height: 150px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    z-index: 80;
+    cursor: pointer;
+}
+
+#minimap canvas {
+    width: 100%;
+    height: 100%;
+}
+
+/* Notification Styles */
+#notifications {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notification {
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 8px;
+    padding: 12px 16px;
+    border-right: 4px solid #ffd700;
+    animation: slideIn 0.3s ease;
+    backdrop-filter: blur(5px);
+    font-size: 13px;
+}
+
+.notification.info {
+    border-right-color: #4fc3f7;
+}
+
+.notification.success {
+    border-right-color: #66bb6a;
+}
+
+.notification.warning {
+    border-right-color: #ffa726;
+}
+
+.notification.error {
+    border-right-color: #ef5350;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Menu Overlay */
+#menu-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+#menu-overlay.active {
+    display: flex;
+}
+
+.menu-panel {
+    background: rgba(20, 20, 40, 0.95);
+    border-radius: 15px;
+    padding: 40px;
+    max-width: 500px;
+    width: 90%;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.menu-title {
+    font-size: 32px;
+    text-align: center;
+    color: #ffd700;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.menu-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Vazirmatn', sans-serif;
+}
+
+.menu-btn:hover {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: #ffd700;
+}
+
+.menu-btn.primary {
+    background: #ffd700;
+    color: #1a1a1a;
+    font-weight: bold;
+}
+
+.menu-btn.primary:hover {
+    background: #ffe44d;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 215, 0, 0.3);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 215, 0, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #topbar {
+        height: 50px;
+        padding: 0 10px;
+        gap: 10px;
+        font-size: 12px;
+        top: 5px;
+        left: 5px;
+        right: 5px;
+    }
+    
+    #sidebar {
+        width: 220px;
+        right: 5px;
+        top: 65px;
+        font-size: 12px;
+        padding: 10px;
+    }
+    
+    #minimap {
+        width: 100px;
+        height: 100px;
+        bottom: 10px;
+        left: 10px;
+    }
+    
+    #notifications {
+        width: 200px;
+        bottom: 10px;
+        right: 10px;
+    }
+   }
