@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>قلمروستان</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- صفحه بارگذاری -->
+    <div id="loading">
+        <h1>🏰 قلمروستان</h1>
+        <p>در حال بارگذاری...</p>
+    </div>
+
+    <!-- صفحه اصلی بازی -->
+    <div id="game">
+
+        <!-- نوار بالا -->
+        <header id="topBar">
+
+            <div class="logo">
+                🏰 قلمروستان
+            </div>
+
+            <div class="resources">
+                👥 نیرو:
+                <span id="troops">0</span>
+
+                &nbsp;&nbsp;
+
+                🏆 قلمرو:
+                <span id="land">1</span>
+            </div>
+
+        </header>
+
+        <!-- نقشه -->
+        <main>
+
+            <canvas id="gameCanvas"></canvas>
+
+        </main>
+
+    </div>
+
+    <script src="js/main.js"></script>
+
+</body>
+
+</html>
