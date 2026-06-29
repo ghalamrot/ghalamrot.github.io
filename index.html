@@ -3,28 +3,521 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qalamrostan - استراتژی تاریخی</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700&display=swap" rel="stylesheet">
+    <title>قلم‌رُستان - بازی استراتژی تاریخی</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a1a;
+            overflow: hidden;
+            height: 100vh;
+            color: #fff;
+        }
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: #0a0a1a;
+        }
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: #0a0a1a;
+            cursor: pointer;
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        #ui-overlay > * {
+            pointer-events: all;
+        }
+        /* Top Bar */
+        #topbar {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            z-index: 100;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+        .topbar-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #ccc;
+            white-space: nowrap;
+        }
+        .topbar-item .icon {
+            font-size: 18px;
+        }
+        .topbar-item .value {
+            font-weight: bold;
+            color: #fff;
+        }
+        .topbar-divider {
+            width: 1px;
+            height: 30px;
+            background: rgba(255,255,255,0.15);
+        }
+        .topbar-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffd700;
+            margin-right: 10px;
+        }
+        /* Sidebar */
+        #sidebar {
+            position: absolute;
+            top: 80px;
+            right: 10px;
+            width: 260px;
+            max-height: calc(100vh - 160px);
+            background: rgba(0, 0, 0, 0.88);
+            border-radius: 12px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            overflow-y: auto;
+            z-index: 90;
+            transition: transform 0.3s ease;
+            font-size: 13px;
+            display: none;
+        }
+        #sidebar.show {
+            display: block;
+        }
+        #sidebar.hidden {
+            transform: translateX(300px);
+            display: none;
+        }
+        .sidebar-title {
+            font-size: 17px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #ffd700;
+        }
+        .sidebar-info {
+            line-height: 1.9;
+            color: #ddd;
+        }
+        .sidebar-info .label {
+            color: #888;
+        }
+        .sidebar-btn {
+            padding: 6px 12px;
+            margin: 3px;
+            background: rgba(255,215,0,0.15);
+            border: 1px solid rgba(255,215,0,0.3);
+            color: #fff;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .sidebar-btn:hover {
+            background: rgba(255,215,0,0.3);
+        }
+        /* Minimap */
+        #minimap {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 140px;
+            height: 140px;
+            background: rgba(0, 0, 0, 0.75);
+            border-radius: 10px;
+            border: 2px solid rgba(255,215,0,0.2);
+            overflow: hidden;
+            z-index: 80;
+            cursor: pointer;
+        }
+        #minimap canvas {
+            width: 100%;
+            height: 100%;
+        }
+        /* Notifications */
+        #notifications {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 280px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .notification {
+            background: rgba(0, 0, 0, 0.92);
+            border-radius: 8px;
+            padding: 10px 14px;
+            border-right: 3px solid #ffd700;
+            animation: slideIn 0.3s ease;
+            backdrop-filter: blur(5px);
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .notification.info { border-right-color: #4fc3f7; }
+        .notification.success { border-right-color: #66bb6a; }
+        .notification.warning { border-right-color: #ffa726; }
+        .notification.error { border-right-color: #ef5350; }
+        @keyframes slideIn {
+            from { transform: translateX(80px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        /* Menu */
+        #menu-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+        }
+        #menu-overlay.active {
+            display: flex;
+        }
+        .menu-panel {
+            background: rgba(20, 20, 40, 0.95);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 420px;
+            width: 90%;
+            border: 1px solid rgba(255,215,0,0.2);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        }
+        .menu-title {
+            font-size: 32px;
+            text-align: center;
+            color: #ffd700;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+        .menu-subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        .menu-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 6px 0;
+            background: rgba(255,215,0,0.08);
+            border: 1px solid rgba(255,215,0,0.2);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .menu-btn:hover {
+            background: rgba(255,215,0,0.18);
+            border-color: #ffd700;
+        }
+        .menu-btn.primary {
+            background: #ffd700;
+            color: #1a1a1a;
+            font-weight: bold;
+        }
+        .menu-btn.primary:hover {
+            background: #ffe44d;
+        }
+        .menu-btn.danger {
+            border-color: rgba(239,83,80,0.3);
+            color: #ef5350;
+        }
+        .menu-btn.danger:hover {
+            background: rgba(239,83,80,0.15);
+        }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,215,0,0.5); }
+        /* Responsive */
+        @media (max-width: 768px) {
+            #topbar { height: 48px; padding: 0 10px; gap: 8px; font-size: 11px; top: 5px; left: 5px; right: 5px; }
+            .topbar-title { font-size: 14px; }
+            #sidebar { width: 200px; right: 5px; top: 60px; font-size: 12px; padding: 10px; }
+            #minimap { width: 100px; height: 100px; bottom: 10px; left: 10px; }
+            #notifications { width: 200px; bottom: 10px; right: 10px; }
+            .menu-panel { padding: 25px; }
+            .menu-title { font-size: 24px; }
+        }
+    </style>
 </head>
 <body>
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         <div id="ui-overlay">
-            <div id="topbar"></div>
-            <div id="sidebar"></div>
-            <div id="minimap"></div>
+            <!-- Top Bar -->
+            <div id="topbar">
+                <span class="topbar-title">⚔️ قلم‌رُستان</span>
+                <span class="topbar-divider"></span>
+                <span class="topbar-item">
+                    <span class="icon">👑</span>
+                    <span class="value" id="playerName">بازیکن</span>
+                </span>
+                <span class="topbar-divider"></span>
+                <span class="topbar-item">
+                    <span class="icon">💰</span>
+                    <span class="value" id="goldDisplay">100</span>
+                </span>
+                <span class="topbar-divider"></span>
+                <span class="topbar-item">
+                    <span class="icon">⚔️</span>
+                    <span class="value" id="armyDisplay">10</span>
+                </span>
+                <span class="topbar-divider"></span>
+                <span class="topbar-item">
+                    <span class="icon">🏛️</span>
+                    <span class="value" id="provinceCount">0</span>
+                </span>
+                <span class="topbar-divider"></span>
+                <span class="topbar-item">
+                    <span class="icon">⏱️</span>
+                    <span class="value" id="timeDisplay">0s</span>
+                </span>
+                <span style="flex:1;"></span>
+                <span class="topbar-item" style="font-size:11px;color:#666;" id="fpsDisplay">FPS: 0</span>
+            </div>
+            
+            <!-- Sidebar -->
+            <div id="sidebar">
+                <div class="sidebar-title" id="sidebarTitle">استان</div>
+                <div class="sidebar-info" id="sidebarContent">
+                    <div><span class="label">مالک:</span> <span id="provOwner">-</span></div>
+                    <div><span class="label">جمعیت:</span> <span id="provPopulation">-</span></div>
+                    <div><span class="label">سرباز:</span> <span id="provArmy">-</span></div>
+                    <div><span class="label">درآمد:</span> <span id="provIncome">-</span></div>
+                    <div><span class="label">دفاع:</span> <span id="provDefense">-</span></div>
+                    <div><span class="label">همسایه‌ها:</span> <span id="provNeighbors">-</span></div>
+                </div>
+                <div id="sidebarActions" style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap;"></div>
+            </div>
+            
+            <!-- Minimap -->
+            <div id="minimap">
+                <canvas id="minimapCanvas"></canvas>
+            </div>
+            
+            <!-- Notifications -->
             <div id="notifications"></div>
-            <div id="menu-overlay"></div>
+            
+            <!-- Menu Overlay -->
+            <div id="menu-overlay">
+                <div class="menu-panel">
+                    <div class="menu-title">⚔️ قلم‌رُستان</div>
+                    <div class="menu-subtitle">بازی استراتژی تاریخی</div>
+                    <button class="menu-btn primary" data-action="start">🚀 شروع بازی</button>
+                    <button class="menu-btn" data-action="random">🎲 نقشه تصادفی</button>
+                    <button class="menu-btn" data-action="settings">⚙️ تنظیمات</button>
+                    <button class="menu-btn" data-action="about">📖 درباره</button>
+                </div>
+            </div>
         </div>
     </div>
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+
+    <script>
+        // ============================================================
+        // ====================== EVENT BUS =============================
+        // ============================================================
+        class EventBus {
+            constructor() {
+                this.events = new Map();
+                this.onceEvents = new Map();
+            }
+            on(event, callback) {
+                if (!this.events.has(event)) this.events.set(event, new Set());
+                this.events.get(event).add(callback);
+            }
+            off(event, callback) {
+                if (this.events.has(event)) this.events.get(event).delete(callback);
+            }
+            once(event, callback) {
+                if (!this.onceEvents.has(event)) this.onceEvents.set(event, new Set());
+                this.onceEvents.get(event).add(callback);
+            }
+            emit(event, data) {
+                if (this.events.has(event)) {
+                    for (const cb of this.events.get(event)) try { cb(data); } catch(e) { console.error(e); }
+                }
+                if (this.onceEvents.has(event)) {
+                    for (const cb of this.onceEvents.get(event)) try { cb(data); } catch(e) { console.error(e); }
+                    this.onceEvents.delete(event);
+                }
             }
         }
-    </script>
-    <script type="module" src="js/main.js"></script>
-</body>
-</html>
+
+        // ============================================================
+        // ====================== GAME STATE ===========================
+        // ============================================================
+        class GameState {
+            constructor() {
+                this.gameStarted = false;
+                this.gamePaused = false;
+                this.turn = 0;
+                this.time = 0;
+                this.players = [];
+                this.provinces = [];
+                this.units = [];
+                this.selectedProvince = null;
+                this.hoveredProvince = null;
+                this.currentPlayerIndex = 0;
+                this.humanPlayerIndex = 0;
+                this.settings = {
+                    numPlayers: 4,
+                    difficulty: 'normal',
+                    mapSize: 30
+                };
+                this.colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#00b894', '#e17055', '#0984e3'];
+            }
+            
+            getCurrentPlayer() { return this.players[this.currentPlayerIndex]; }
+            getHumanPlayer() { return this.players[this.humanPlayerIndex]; }
+            getPlayerById(id) { return this.players.find(p => p.id === id); }
+            getProvince(id) { return this.provinces.find(p => p.id === id); }
+            getProvincesByOwner(playerId) { return this.provinces.filter(p => p.ownerId === playerId); }
+            
+            initializePlayers() {
+                this.players = [];
+                const num = this.settings.numPlayers || 4;
+                const names = ['بازیکن', 'عثمانی', 'روسیه', 'مغولستان', 'چین', 'هند', 'ژاپن', 'ایران'];
+                for (let i = 0; i < num; i++) {
+                    this.players.push({
+                        id: i,
+                        name: names[i] || `کشور ${i+1}`,
+                        color: this.colors[i % this.colors.length],
+                        isHuman: i === 0,
+                        gold: 100 + Math.floor(Math.random() * 50),
+                        army: 10 + Math.floor(Math.random() * 10),
+                        provinces: [],
+                        diplomacy: {}
+                    });
+                }
+                this.humanPlayerIndex = 0;
+                this.currentPlayerIndex = 0;
+            }
+        }
+
+        // ============================================================
+        // ====================== PROVINCE =============================
+        // ============================================================
+        class Province {
+            constructor(data) {
+                this.id = data.id || Math.random();
+                this.name = data.name || `استان ${this.id}`;
+                this.center = data.center || { x: Math.random()*600+100, y: Math.random()*400+100 };
+                this.radius = data.radius || 25 + Math.random()*20;
+                this.ownerId = data.ownerId || null;
+                this.population = data.population || 1000 + Math.floor(Math.random()*4000);
+                this.goldPerTurn = data.goldPerTurn || 1 + Math.floor(Math.random()*3);
+                this.army = data.army || 0;
+                this.maxArmy = data.maxArmy || 10;
+                this.defense = data.defense || 1;
+                this.neighbors = data.neighbors || [];
+                this.buildings = data.buildings || [];
+                this.color = data.color || '#666';
+                this.flashTimer = 0;
+            }
+            getColor() {
+                if (this.ownerId !== null) {
+                    const state = window.game?.state;
+                    const player = state?.getPlayerById(this.ownerId);
+                    return player?.color || '#888';
+                }
+                return '#444';
+            }
+            flash(duration = 0.5) { this.flashTimer = duration; }
+            update(dt) { if (this.flashTimer > 0) this.flashTimer -= dt; }
+            isFlashing() { return this.flashTimer > 0; }
+            getFlashValue() { return this.isFlashing() ? Math.sin(this.flashTimer * 20) * 0.3 + 0.7 : 1; }
+        }
+
+        // ============================================================
+        // ====================== CAMERA ===============================
+        // ============================================================
+        class Camera {
+            constructor() {
+                this.x = 0; this.y = 0; this.zoom = 1;
+                this.targetX = 0; this.targetY = 0; this.targetZoom = 1;
+                this.width = 0; this.height = 0;
+                this.minZoom = 0.3; this.maxZoom = 3;
+                this.dragging = false;
+                this.dragStartX = 0; this.dragStartY = 0;
+                this.dragStartCamX = 0; this.dragStartCamY = 0;
+            }
+            init(canvas) {
+                this.width = canvas.width;
+                this.height = canvas.height;
+                this.x = this.width/2; this.y = this.height/2;
+                this.targetX = this.x; this.targetY = this.y;
+            }
+            update() {
+                this.x += (this.targetX - this.x) * 0.08;
+                this.y += (this.targetY - this.y) * 0.08;
+                this.zoom += (this.targetZoom - this.zoom) * 0.08;
+                this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoom));
+            }
+            moveTo(x, y) { this.targetX = x; this.targetY = y; }
+            moveBy(dx, dy) { this.targetX += dx; this.targetY += dy; }
+            zoomTo(z, cx, cy) {
+                if (cx === undefined) cx = this.width/2;
+                if (cy === undefined) cy = this.height/2;
+                const old = this.zoom;
+                this.targetZoom = Math.max(this.minZoom, Math.min(this.maxZoom, z));
+                const ratio = this.targetZoom / old;
+                this.targetX = cx - (cx - this.x) * ratio;
+                this.targetY = cy - (cy - this.y) * ratio;
+            }
+            screenToWorld(sx, sy) {
+                return { x: (sx - this.x) / this.zoom + this.x, y: (sy - this.y) / this.zoom + this.y };
+            }
+            worldToScreen(wx, wy) {
+                return { x: (wx - this.x) * this.zoom + this.x, y: (wy - this.y) * this.zoom + this.y };
+            }
+            startDrag(x, y) {
+                this.dragging = true;
+                this.dragStartX = x; this.dragStartY = y;
+                this.dragStartCamX = this.x; this.dragStartCamY = this.y;
+            }
+            dragTo(x, y) {
+                if (!this.dragging) return;
+                const dx = x - this.dragStartX;
+                const dy = y - this.dragStartY;
+                this.targetX = this.dragStartCamX - dx / this.zoom;
+                this.targetY = this.dragStartCamY - dy / this.zoom;
+            }
+            endDrag() { this.dragging = false; }
+        }
+
+        // ============================================================
+        // ================
