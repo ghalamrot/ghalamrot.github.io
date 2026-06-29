@@ -1,77 +1,30 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
-
 <head>
-
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>قلمروستان</title>
-
-    <meta name="description"
-          content="قلمروستان | بازی استراتژیک آنلاین">
-
-    <meta name="theme-color"
-          content="#1d2635">
-
-    <link rel="icon"
-          href="assets/images/favicon.png">
-
-    <link rel="stylesheet"
-          href="style.css">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qalamrostan - استراتژی تاریخی</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
-
-    <!-- صفحه بارگذاری -->
-    <div id="loading-screen">
-
-        <h1>🏰 قلمروستان</h1>
-
-        <p>در حال بارگذاری...</p>
-
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui-overlay">
+            <div id="topbar"></div>
+            <div id="sidebar"></div>
+            <div id="minimap"></div>
+            <div id="notifications"></div>
+            <div id="menu-overlay"></div>
+        </div>
     </div>
-
-    <!-- بازی -->
-    <div id="game">
-
-        <!-- نوار بالا -->
-        <header id="top-bar">
-
-            <div id="logo">
-
-                🏰 قلمروستان
-
-            </div>
-
-            <div id="status-bar">
-
-                <span id="fps">
-                    FPS:0
-                </span>
-
-            </div>
-
-        </header>
-
-        <!-- محیط بازی -->
-        <main id="game-area">
-
-            <canvas id="game-canvas">
-
-            </canvas>
-
-        </main>
-
-    </div>
-
-    <script
-        type="module"
-        src="js/main.js">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+            }
+        }
     </script>
-
+    <script type="module" src="js/main.js"></script>
 </body>
-
 </html>
