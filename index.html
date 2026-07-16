@@ -1,711 +1,1216 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚔️ قلم‌رُستان - بازی استراتژی تاریخی</title>
-    
-    <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>🎭 حالت‌یاب - بازی تشخیص چهره</title>
     
     <style>
-        /* ============================================================
-           RESET & BASE
-           ============================================================ */
+        /* ===== استایل کامل ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         body {
-            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0a0a1a;
-            overflow: hidden;
-            height: 100vh;
-            color: #fff;
-            user-select: none;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
         }
-        
-        /* ============================================================
-           GAME CONTAINER
-           ============================================================ */
-        #game-container {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-            background: #0a0a1a;
-        }
-        
-        #gameCanvas {
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 40px;
+            padding: 30px 25px;
+            max-width: 480px;
             width: 100%;
-            height: 100%;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            text-align: center;
+            color: #302b63;
+            font-size: 28px;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        /* ===== نمایش ایموجی هدف ===== */
+        .emoji-display {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 30px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        #targetEmoji {
+            font-size: 70px;
+            line-height: 1;
+            animation: pulse 1.5s infinite;
+            background: white;
+            padding: 10px 25px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.05) rotate(-3deg); }
+        }
+
+        .level-badge {
+            background: white;
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #302b63;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* ===== دوربین و بوم ===== */
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: 25px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 15px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #webcam {
+            width: 100%;
+            height: auto;
+            display: none;
+            transform: scaleX(-1);
+            border-radius: 25px;
+        }
+
+        #webcam.active {
             display: block;
-            background: #0a0a1a;
-            cursor: grab;
         }
-        
-        #gameCanvas:active {
-            cursor: grabbing;
-        }
-        
-        /* ============================================================
-           UI OVERLAY
-           ============================================================ */
-        #ui-overlay {
+
+        #overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             pointer-events: none;
+            transform: scaleX(-1);
+            border-radius: 25px;
+            display: none;
         }
-        
-        #ui-overlay > * {
-            pointer-events: all;
+
+        #overlay.active {
+            display: block;
         }
-        
-        /* ============================================================
-           TOP BAR
-           ============================================================ */
-        #topbar {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            height: 60px;
-            background: rgba(0, 0, 0, 0.85);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            gap: 12px;
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 215, 0, 0.15);
-            z-index: 100;
-            font-size: 13px;
-            overflow-x: auto;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+
+        /* ===== وضعیت دوربین ===== */
+        .camera-placeholder {
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+            width: 100%;
         }
-        
-        .topbar-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            color: #ccc;
-            white-space: nowrap;
-            padding: 4px 8px;
-            border-radius: 6px;
-            transition: background 0.3s;
+
+        .camera-placeholder .icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+            display: block;
         }
-        
-        .topbar-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        
-        .topbar-item .icon {
-            font-size: 18px;
-        }
-        
-        .topbar-item .value {
-            font-weight: bold;
-            color: #fff;
-            font-size: 14px;
-        }
-        
-        .topbar-divider {
-            width: 1px;
-            height: 30px;
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .topbar-title {
+
+        .camera-placeholder h3 {
             font-size: 20px;
-            font-weight: 900;
-            color: #ffd700;
-            margin-right: 5px;
-            letter-spacing: 1px;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+            margin-bottom: 10px;
+            color: #fff;
         }
-        
-        .topbar-title .sub {
-            font-size: 11px;
-            color: #888;
-            font-weight: 400;
-            margin-right: 5px;
+
+        .camera-placeholder p {
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 20px;
+            line-height: 1.6;
         }
-        
-        /* ============================================================
-           SIDEBAR
-           ============================================================ */
-        #sidebar {
-            position: absolute;
-            top: 80px;
-            right: 10px;
-            width: 280px;
-            max-height: calc(100vh - 160px);
-            background: rgba(0, 0, 0, 0.88);
-            border-radius: 12px;
-            padding: 18px;
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 215, 0, 0.1);
-            overflow-y: auto;
-            z-index: 90;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translateX(320px);
-            opacity: 0;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
-        }
-        
-        #sidebar.show {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        
-        #sidebar.hidden {
-            transform: translateX(320px);
-            opacity: 0;
-        }
-        
-        .sidebar-title {
+
+        /* ===== دکمه درخواست دسترسی ===== */
+        .request-btn {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 50px;
             font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            color: #ffd700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .sidebar-title .badge {
-            font-size: 11px;
-            background: rgba(255, 215, 0, 0.15);
-            padding: 2px 10px;
-            border-radius: 12px;
-            color: #aaa;
-        }
-        
-        .sidebar-info {
-            line-height: 2;
-            color: #ddd;
-            font-size: 13px;
-        }
-        
-        .sidebar-info .label {
-            color: #888;
-            font-size: 12px;
-        }
-        
-        .sidebar-info .value-highlight {
-            color: #ffd700;
             font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 176, 155, 0.4);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
         }
-        
-        .sidebar-info .row {
+
+        .request-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 176, 155, 0.5);
+        }
+
+        .request-btn:active {
+            transform: scale(0.95);
+        }
+
+        .request-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ===== وضعیت و امتیاز ===== */
+        .status-bar {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            align-items: center;
+            background: #f8f9ff;
+            padding: 15px 20px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            border: 2px solid #e8eaff;
         }
-        
-        .sidebar-actions {
-            margin-top: 14px;
+
+        #scoreDisplay {
+            font-size: 22px;
+            font-weight: bold;
+            color: #302b63;
+            direction: ltr;
+        }
+
+        #scoreDisplay .score-number {
+            color: #764ba2;
+            font-size: 28px;
+        }
+
+        #message {
+            font-size: 14px;
+            color: #555;
+            background: #f0f0f0;
+            padding: 8px 16px;
+            border-radius: 50px;
+            max-width: 60%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        #message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        #message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        #message.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        /* ===== دکمه‌ها ===== */
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        button {
+            padding: 16px 20px;
+            border: none;
+            border-radius: 18px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
             display: flex;
-            gap: 6px;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: white;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        #startBtn {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+        }
+
+        #startBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 176, 155, 0.4);
+        }
+
+        #captureBtn {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        #captureBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(245, 87, 108, 0.4);
+        }
+
+        #resetBtn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            grid-column: span 2;
+        }
+
+        #resetBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4);
+        }
+
+        /* ===== تاریخچه امتیازات ===== */
+        .history-section {
+            margin-top: 15px;
+            background: #f8f9ff;
+            border-radius: 20px;
+            padding: 15px;
+            border: 2px solid #e8eaff;
+        }
+
+        .history-title {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #historyList {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-height: 30px;
+        }
+
+        .history-item {
+            background: white;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 13px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+        }
+
+        .history-item .h-emoji { font-size: 18px; }
+        .history-item .h-score {
+            font-weight: bold;
+            color: #764ba2;
+        }
+
+        .best-score {
+            color: #f5576c;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* ===== استایل موبایل ===== */
+        @media (max-width: 480px) {
+            .game-container { padding: 20px 15px; }
+            #targetEmoji { font-size: 50px; padding: 8px 18px; }
+            .emoji-display { padding: 15px; }
+            button { padding: 14px 16px; font-size: 15px; }
+            #scoreDisplay { font-size: 18px; }
+            #message { font-size: 12px; max-width: 50%; }
+            .camera-placeholder .icon { font-size: 48px; }
+            .camera-placeholder h3 { font-size: 18px; }
+        }
+
+        /* ===== انیمیشن امتیاز ===== */
+        .score-popup {
+            animation: scorePop 0.5s ease;
+        }
+
+        @keyframes scorePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); color: #f5576c; }
+            100% { transform: scale(1); }
+        }
+
+        /* ===== وضعیت دوربین ===== */
+        .camera-status {
+            text-align: center;
+            font-size: 13px;
+            color: #999;
+            margin-top: 8px;
+            padding: 6px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .camera-status.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .camera-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .camera-status.waiting {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        /* ===== مودال درخواست دسترسی (برای مرورگرهای مسدودکننده) ===== */
+        .permission-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .permission-overlay.active {
+            display: flex;
+        }
+
+        .permission-box {
+            background: white;
+            border-radius: 30px;
+            padding: 40px 30px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .permission-box .big-icon {
+            font-size: 72px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .permission-box h2 {
+            color: #302b63;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .permission-box p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            font-size: 15px;
+        }
+
+        .permission-box .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
             flex-wrap: wrap;
         }
-        
-        .sidebar-btn {
-            padding: 6px 14px;
-            background: rgba(255, 215, 0, 0.08);
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            color: #fff;
-            border-radius: 8px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: inherit;
-            flex: 1;
-            min-width: 60px;
-            text-align: center;
-        }
-        
-        .sidebar-btn:hover {
-            background: rgba(255, 215, 0, 0.2);
-            border-color: #ffd700;
-            transform: translateY(-1px);
-        }
-        
-        .sidebar-btn:active {
-            transform: translateY(0);
-        }
-        
-        .sidebar-btn.danger {
-            border-color: rgba(239, 83, 80, 0.3);
-            color: #ef5350;
-        }
-        
-        .sidebar-btn.danger:hover {
-            background: rgba(239, 83, 80, 0.15);
-        }
-        
-        /* ============================================================
-           MINIMAP
-           ============================================================ */
-        #minimap {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 150px;
-            height: 150px;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 10px;
-            border: 2px solid rgba(255, 215, 0, 0.15);
-            overflow: hidden;
-            z-index: 80;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        }
-        
-        #minimap:hover {
-            border-color: rgba(255, 215, 0, 0.3);
-            transform: scale(1.02);
-        }
-        
-        #minimap canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-        
-        /* ============================================================
-           NOTIFICATIONS
-           ============================================================ */
-        #notifications {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 300px;
-            z-index: 200;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        
-        .notification {
-            background: rgba(0, 0, 0, 0.92);
-            border-radius: 10px;
-            padding: 12px 16px;
-            border-right: 4px solid #ffd700;
-            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(8px);
-            font-size: 13px;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-        
-        .notification.info { border-right-color: #4fc3f7; }
-        .notification.success { border-right-color: #66bb6a; }
-        .notification.warning { border-right-color: #ffa726; }
-        .notification.error { border-right-color: #ef5350; }
-        .notification.battle { border-right-color: #ff6b6b; }
-        .notification.economy { border-right-color: #4ecdc4; }
-        
-        .notification .time {
-            font-size: 10px;
-            color: #666;
-            margin-right: 8px;
-        }
-        
-        @keyframes slideIn {
-            from {
-                transform: translateX(100px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        .notification.fade-out {
-            opacity: 0;
-            transform: translateX(50px);
-        }
-        
-        /* ============================================================
-           MENU OVERLAY
-           ============================================================ */
-        #menu-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-        }
-        
-        #menu-overlay.active {
-            display: flex;
-        }
-        
-        .menu-panel {
-            background: rgba(15, 15, 35, 0.95);
-            border-radius: 20px;
-            padding: 45px;
-            max-width: 440px;
-            width: 90%;
-            border: 1px solid rgba(255, 215, 0, 0.15);
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
-            animation: menuPop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        @keyframes menuPop {
-            from {
-                transform: scale(0.9) translateY(20px);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1) translateY(0);
-                opacity: 1;
-            }
-        }
-        
-        .menu-title {
-            font-size: 36px;
-            text-align: center;
-            color: #ffd700;
-            margin-bottom: 8px;
-            font-weight: 900;
-            letter-spacing: 2px;
-            text-shadow: 0 0 40px rgba(255, 215, 0, 0.15);
-        }
-        
-        .menu-subtitle {
-            text-align: center;
-            color: #888;
-            margin-bottom: 30px;
-            font-size: 14px;
-            letter-spacing: 3px;
-        }
-        
-        .menu-btn {
-            display: block;
-            width: 100%;
-            padding: 14px;
-            margin: 7px 0;
-            background: rgba(255, 215, 0, 0.06);
-            border: 1px solid rgba(255, 215, 0, 0.15);
-            color: #fff;
-            border-radius: 10px;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: inherit;
-            text-align: center;
-        }
-        
-        .menu-btn:hover {
-            background: rgba(255, 215, 0, 0.12);
-            border-color: #ffd700;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.1);
-        }
-        
-        .menu-btn:active {
-            transform: translateY(0);
-        }
-        
-        .menu-btn.primary {
-            background: #ffd700;
-            color: #1a1a1a;
-            font-weight: 700;
-            border-color: #ffd700;
-        }
-        
-        .menu-btn.primary:hover {
-            background: #ffe44d;
-            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.3);
-        }
-        
-        .menu-btn.danger {
-            border-color: rgba(239, 83, 80, 0.3);
-            color: #ef5350;
-        }
-        
-        .menu-btn.danger:hover {
-            background: rgba(239, 83, 80, 0.12);
-        }
-        
-        .menu-btn .shortcut {
-            font-size: 11px;
-            color: #666;
-            margin-right: 10px;
-        }
-        
-        .menu-setting {
-            margin: 12px 0;
-            color: #ccc;
-        }
-        
-        .menu-setting label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-        }
-        
-        .menu-setting input[type="range"] {
-            width: 60%;
-            accent-color: #ffd700;
-            background: transparent;
-        }
-        
-        .menu-setting select {
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 13px;
-        }
-        
-        .menu-setting .value-display {
-            color: #ffd700;
+
+        .permission-box .btn-allow {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+            color: white;
+            border: none;
+            padding: 14px 35px;
+            border-radius: 50px;
+            font-size: 17px;
             font-weight: bold;
-            min-width: 30px;
-            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        
-        /* ============================================================
-           LOADING SCREEN
-           ============================================================ */
-        #loading {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0a0a1a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            flex-direction: column;
-            gap: 20px;
+
+        .permission-box .btn-allow:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 176, 155, 0.4);
         }
-        
-        #loading.hidden {
-            display: none;
+
+        .permission-box .btn-deny {
+            background: #e0e0e0;
+            color: #555;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 50px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 3px solid rgba(255, 215, 0, 0.1);
-            border-top-color: #ffd700;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+
+        .permission-box .btn-deny:hover {
+            background: #d0d0d0;
         }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+
+        .hidden {
+            display: none !important;
         }
-        
-        .loading-text {
-            color: #888;
-            font-size: 14px;
-            letter-spacing: 2px;
+
+        /* ===== نشانگر بارگذاری ===== */
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s infinite;
         }
-        
-        .loading-text .highlight {
-            color: #ffd700;
-        }
-        
-        /* ============================================================
-           SCROLLBAR
-           ============================================================ */
-        ::-webkit-scrollbar {
-            width: 5px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 3px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 215, 0, 0.25);
-            border-radius: 3px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 215, 0, 0.4);
-        }
-        
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
-        @media (max-width: 768px) {
-            #topbar {
-                height: 50px;
-                padding: 0 10px;
-                gap: 6px;
-                font-size: 11px;
-                top: 5px;
-                left: 5px;
-                right: 5px;
-                border-radius: 8px;
-            }
-            
-            .topbar-title {
-                font-size: 15px;
-            }
-            .topbar-title .sub {
-                display: none;
-            }
-            .topbar-item .icon {
-                font-size: 14px;
-            }
-            .topbar-item .value {
-                font-size: 12px;
-            }
-            .topbar-divider {
-                height: 20px;
-            }
-            
-            #sidebar {
-                width: 220px;
-                right: 5px;
-                top: 62px;
-                font-size: 12px;
-                padding: 12px;
-                max-height: calc(100vh - 130px);
-                border-radius: 8px;
-            }
-            
-            #minimap {
-                width: 100px;
-                height: 100px;
-                bottom: 10px;
-                left: 10px;
-                border-radius: 8px;
-            }
-            
-            #notifications {
-                width: 200px;
-                bottom: 10px;
-                right: 10px;
-            }
-            
-            .notification {
-                font-size: 12px;
-                padding: 8px 12px;
-            }
-            
-            .menu-panel {
-                padding: 25px;
-            }
-            
-            .menu-title {
-                font-size: 26px;
-            }
-            
-            .menu-btn {
-                padding: 12px;
-                font-size: 14px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            #topbar {
-                height: 42px;
-                padding: 0 6px;
-                gap: 4px;
-                font-size: 10px;
-            }
-            
-            .topbar-title {
-                font-size: 12px;
-            }
-            .topbar-item {
-                padding: 2px 4px;
-            }
-            .topbar-item .icon {
-                font-size: 12px;
-            }
-            .topbar-item .value {
-                font-size: 10px;
-            }
-            
-            #sidebar {
-                width: 180px;
-                right: 3px;
-                top: 52px;
-                font-size: 11px;
-                padding: 8px;
-                max-height: calc(100vh - 110px);
-            }
-            
-            #minimap {
-                width: 70px;
-                height: 70px;
-                bottom: 5px;
-                left: 5px;
-            }
-            
-            #notifications {
-                width: 150px;
-                bottom: 5px;
-                right: 5px;
-            }
-            
-            .menu-panel {
-                padding: 20px;
-            }
-            
-            .menu-title {
-                font-size: 22px;
-            }
+
+        @keyframes dots {
+            0% { content: ''; }
+            33% { content: '.'; }
+            66% { content: '..'; }
+            100% { content: '...'; }
         }
     </style>
 </head>
 <body>
-    <!-- ============================================================
-    LOADING SCREEN
-    ============================================================ -->
-    <div id="loading">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">
-            <span class="highlight">⚔️</span> در حال بارگذاری قلم‌رُستان <span class="highlight">⚔️</span>
+
+    <!-- ===== مودال درخواست دسترسی ===== -->
+    <div class="permission-overlay" id="permissionOverlay">
+        <div class="permission-box">
+            <span class="big-icon">📷</span>
+            <h2>دسترسی به دوربین</h2>
+            <p>
+                برای بازی <strong>حالت‌یاب</strong> نیاز به دسترسی به دوربین داریم.
+                <br />
+                فقط تصویر صورت شما برای تشخیص حالت چهره استفاده می‌شود.
+                <br />
+                <span style="color:#764ba2; font-size:13px;">
+                    ✅ هیچ تصویری ذخیره یا ارسال نمی‌شود
+                </span>
+            </p>
+            <div class="btn-group">
+                <button class="btn-allow" id="allowCameraBtn">
+                    📸 اجازه دسترسی
+                </button>
+                <button class="btn-deny" id="denyCameraBtn">
+                    ❌ نه، بعداً
+                </button>
+            </div>
         </div>
     </div>
-    
-    <!-- ============================================================
-    GAME CONTAINER
-    ============================================================ -->
-    <div id="game-container">
-        <!-- Canvas -->
-        <canvas id="gameCanvas"></canvas>
-        
-        <!-- UI Overlay -->
-        <div id="ui-overlay">
-            <!-- Top Bar -->
-            <div id="topbar">
-                <span class="topbar-title">
-                    ⚔️ قلم‌رُستان
-                    <span class="sub">| استراتژی</span>
-                </span>
-                <span class="topbar-divider"></span>
-                <span class="topbar-item">
-                    <span class="icon">👑</span>
-                    <span class="value" id="playerName">بازیکن</span>
-                </span>
-          
+
+    <!-- ===== بازی اصلی ===== -->
+    <div class="game-container">
+        <!-- هدر -->
+        <h1>🎭 حالت‌یاب</h1>
+        <div class="subtitle">حالت صورتت رو شبیه ایموجی کن!</div>
+
+        <!-- نمایش ایموجی هدف -->
+        <div class="emoji-display">
+            <span class="level-badge">🎯 هدف</span>
+            <span id="targetEmoji">😀</span>
+            <span class="level-badge" id="levelDisplay">مرحله ۰</span>
+        </div>
+
+        <!-- دوربین و بوم -->
+        <div class="video-wrapper" id="videoWrapper">
+            <!-- placeholder قبل از فعال شدن دوربین -->
+            <div class="camera-placeholder" id="cameraPlaceholder">
+                <span class="icon">📷</span>
+                <h3>دوربین غیرفعال</h3>
+                <p>
+                    برای شروع بازی، ابتدا اجازه دسترسی به دوربین را بدهید
+                </p>
+                <button class="request-btn" id="requestCameraBtn">
+                    📸 فعال‌سازی دوربین
+                </button>
+            </div>
+
+            <!-- ویدئو و بوم (پنهان تا فعال شود) -->
+            <video id="webcam" autoplay playsinline muted></video>
+            <canvas id="overlay"></canvas>
+        </div>
+
+        <!-- وضعیت و امتیاز -->
+        <div class="status-bar">
+            <div id="scoreDisplay">
+                ⭐ <span class="score-number" id="scoreNumber">۰</span>%
+            </div>
+            <div id="message">⏳ منتظر فعال‌سازی دوربین...</div>
+        </div>
+
+        <!-- دکمه‌ها -->
+        <div class="button-group">
+            <button id="startBtn" disabled>🎲 ایموجی جدید</button>
+            <button id="captureBtn" disabled>📸 ثبت حالت</button>
+            <button id="resetBtn" disabled>🔄 شروع مجدد</button>
+        </div>
+
+        <!-- تاریخچه -->
+        <div class="history-section">
+            <div class="history-title">
+                <span>📋 تاریخچه</span>
+                <span class="best-score" id="bestScore">🏆 بهترین: ۰%</span>
+            </div>
+            <div id="historyList">
+                <span style="color:#ccc; font-size:13px;">هنوز امتیازی ثبت نشده</span>
+            </div>
+        </div>
+
+        <!-- وضعیت دوربین -->
+        <div class="camera-status waiting" id="cameraStatus">
+            ⏳ در انتظار دسترسی به دوربین...
+        </div>
+    </div>
+
+    <!-- ===== کتابخانه‌های MediaPipe ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js">
+    </script>
+
+    <!-- ===== کد اصلی بازی ===== -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ============================================
+            // ۱. عناصر DOM
+            // ============================================
+            const videoElement = document.getElementById('webcam');
+            const canvasElement = document.getElementById('overlay');
+            const canvasCtx = canvasElement.getContext('2d');
+            const targetEmoji = document.getElementById('targetEmoji');
+            const scoreNumber = document.getElementById('scoreNumber');
+            const message = document.getElementById('message');
+            const historyList = document.getElementById('historyList');
+            const bestScoreEl = document.getElementById('bestScore');
+            const levelDisplay = document.getElementById('levelDisplay');
+            const cameraStatus = document.getElementById('cameraStatus');
+            const videoWrapper = document.getElementById('videoWrapper');
+            const cameraPlaceholder = document.getElementById('cameraPlaceholder');
+
+            // مودال
+            const permissionOverlay = document.getElementById('permissionOverlay');
+
+            // دکمه‌ها
+            const startBtn = document.getElementById('startBtn');
+            const captureBtn = document.getElementById('captureBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const requestCameraBtn = document.getElementById('requestCameraBtn');
+            const allowCameraBtn = document.getElementById('allowCameraBtn');
+            const denyCameraBtn = document.getElementById('denyCameraBtn');
+
+            // ============================================
+            // ۲. متغیرهای حالت بازی
+            // ============================================
+            const EMOJIS = ['😀', '😮', '😡', '😭', '😜', '😎', '🥳', '🤔', '😏', '🥺'];
+            let currentEmoji = '😀';
+            let currentScore = 0;
+            let bestScore = parseInt(localStorage.getItem('faceMimicBest')) || 0;
+            let history = JSON.parse(localStorage.getItem('faceMimicHistory')) || [];
+            let round = 0;
+            let isDetecting = false;
+            let lastDetected = '';
+            let isCameraActive = false;
+            let faceMesh = null;
+            let camera = null;
+            let isGameReady = false;
+
+            // ============================================
+            // ۳. توابع مدیریت وضعیت دکمه‌ها
+            // ============================================
+            function setButtonsEnabled(enabled) {
+                startBtn.disabled = !enabled;
+                captureBtn.disabled = !enabled;
+                resetBtn.disabled = !enabled;
+            }
+
+            function setButtonsGameReady(ready) {
+                isGameReady = ready;
+                if (isCameraActive) {
+                    setButtonsEnabled(ready);
+                }
+            }
+
+            // ============================================
+            // ۴. درخواست دسترسی دوربین
+            // ============================================
+            async function requestCameraPermission() {
+                try {
+                    // نمایش وضعیت در انتظار
+                    cameraStatus.textContent = '⏳ درخواست دسترسی به دوربین...';
+                    cameraStatus.className = 'camera-status waiting';
+                    message.textContent = '📷 در حال درخواست دسترسی...';
+                    message.className = 'info';
+
+                    // درخواست واقعی دسترسی
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 480 },
+                            height: { ideal: 480 },
+                            facingMode: 'user'
+                        },
+                        audio: false
+                    });
+
+                    // اگر اینجا رسیدیم یعنی دسترسی داده شده
+                    return await handleCameraSuccess(stream);
+
+                } catch (error) {
+                    // دسترسی داده نشد یا خطا رخ داد
+                    return handleCameraError(error);
+                }
+            }
+
+            // ============================================
+            // ۵. مدیریت موفقیت دوربین
+            // ============================================
+            async function handleCameraSuccess(stream) {
+                try {
+                    isCameraActive = true;
+                    setButtonsEnabled(false);
+
+                    // اتصال استریم به ویدئو
+                    videoElement.srcObject = stream;
+                    await new Promise((resolve) => {
+                        videoElement.onloadedmetadata = () => {
+                            videoElement.play();
+                            resolve();
+                        };
+                    });
+
+                    // نمایش ویدئو و بوم
+                    videoElement.classList.add('active');
+                    canvasElement.classList.add('active');
+                    cameraPlaceholder.style.display = 'none';
+
+                    // تنظیم اندازه بوم
+                    canvasElement.width = videoElement.videoWidth || 480;
+                    canvasElement.height = videoElement.videoHeight || 480;
+
+                    // بروزرسانی وضعیت
+                    cameraStatus.textContent = '✅ دوربین فعال شد';
+                    cameraStatus.className = 'camera-status active';
+                    message.textContent = '🎯 آماده بازی! دکمه "ایموجی جدید" را بزن';
+                    message.className = 'info';
+
+                    // بستن مودال
+                    permissionOverlay.classList.remove('active');
+
+                    // شروع تشخیص چهره
+                    startFaceDetection();
+
+                    // فعال کردن دکمه‌ها
+                    setButtonsEnabled(true);
+                    setButtonsGameReady(true);
+
+                    // شروع اولین مرحله
+                    setTimeout(newRound, 500);
+
+                    return true;
+
+                } catch (error) {
+                    console.error('خطا در راه‌اندازی:', error);
+                    return handleCameraError(error);
+                }
+            }
+
+            // ============================================
+            // ۶. مدیریت خطای دوربین
+            // ============================================
+            function handleCameraError(error) {
+                isCameraActive = false;
+                setButtonsEnabled(false);
+                setButtonsGameReady(false);
+
+                let errorMessage = '❌ دسترسی به دوربین داده نشد!';
+                let statusClass = 'error';
+
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    errorMessage = '❌ شما دسترسی به دوربین را رد کردید. برای بازی نیاز به دوربین داریم.';
+                    // نمایش مودال دوباره
+                    setTimeout(() => {
+                        permissionOverlay.classList.add('active');
+                    }, 500);
+                } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                    errorMessage = '❌ دوربینی روی دستگاه شما پیدا نشد!';
+                } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                    errorMessage = '❌ دوربین در دسترس نیست. ممکن است توسط برنامه دیگری استفاده شود.';
+                } else {
+                    errorMessage = `❌ خطا: ${error.message || 'مشخص نیست'}`;
+                }
+
+                cameraStatus.textContent = errorMessage;
+                cameraStatus.className = `camera-status ${statusClass}`;
+                message.textContent = errorMessage;
+                message.className = 'error';
+
+                // نمایش placeholder
+                videoElement.classList.remove('active');
+                canvasElement.classList.remove('active');
+                cameraPlaceholder.style.display = 'block';
+
+                return false;
+            }
+
+            // ============================================
+            // ۷. تنظیمات MediaPipe
+            // ============================================
+            function initFaceMesh() {
+                return new FaceMesh({
+                    locateFile: (file) => {
+                        return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+                    }
+                });
+            }
+
+            // ============================================
+            // ۸. تشخیص چهره
+            // ============================================
+            function startFaceDetection() {
+                if (faceMesh) {
+                    faceMesh.close();
+                }
+
+                faceMesh = initFaceMesh();
+
+                faceMesh.setOptions({
+                    maxNumFaces: 1,
+                    refineLandmarks: true,
+                    minDetectionConfidence: 0.6,
+                    minTrackingConfidence: 0.5
+                });
+
+                faceMesh.onResults((results) => {
+                    drawFaceMesh(results);
+                    if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                        const landmarks = results.multiFaceLandmarks[0];
+                        const detected = analyzeExpression(landmarks);
+                        updateGameState(detected);
+                    } else {
+                        if (isDetecting) {
+                            message.textContent = '😕 صورتت را در کادر قرار بده';
+                            message.className = 'info';
+                        }
+                    }
+                });
+
+                camera = new Camera(videoElement, {
+                    onFrame: async () => {
+                        if (faceMesh && isCameraActive) {
+                            try {
+                                await faceMesh.send({ image: videoElement });
+                            } catch (e) {
+                                // خطا را نادیده بگیر
+                            }
+                        }
+                    },
+                    width: 480,
+                    height: 480
+                });
+
+                camera.start().catch(err => {
+                    console.error('خطا در شروع تشخیص:', err);
+                });
+            }
+
+            // ============================================
+            // ۹. تحلیل حالت چهره (هوش مصنوعی)
+            // ============================================
+            function analyzeExpression(landmarks) {
+                // نقاط کلیدی بر اساس مدل ۴۶۸ نقطه‌ای MediaPipe
+                const mouthUpper = landmarks[13];
+                const mouthLower = landmarks[14];
+                const mouthLeft = landmarks[61];
+                const mouthRight = landmarks[291];
+                const leftEyeTop = landmarks[159];
+                const leftEyeBottom = landmarks[145];
+                const rightEyeTop = landmarks[386];
+                const rightEyeBottom = landmarks[374];
+                const leftBrow = landmarks[70];
+                const rightBrow = landmarks[300];
+
+                const mouthOpen = Math.abs(mouthUpper.y - mouthLower.y);
+                const mouthWidth = Math.abs(mouthLeft.x - mouthRight.x);
+                const leftEyeOpen = Math.abs(leftEyeTop.y - leftEyeBottom.y);
+                const rightEyeOpen = Math.abs(rightEyeTop.y - rightEyeBottom.y);
+                const avgEyeOpen = (leftEyeOpen + rightEyeOpen) / 2;
+                const browHeight = (leftBrow.y + rightBrow.y) / 2;
+
+                let detected = '😐';
+
+                if (mouthOpen > 0.045) {
+                    detected = '😮';
+                } else if (mouthWidth > 0.075 && mouthOpen > 0.02) {
+                    detected = '😀';
+                } else if (browHeight < 0.35 && mouthOpen < 0.025) {
+                    detected = '😡';
+                } else if (avgEyeOpen < 0.012) {
+                    detected = '😎';
+                } else if (mouthOpen > 0.035 && mouthWidth > 0.06) {
+                    detected = '😜';
+                } else if (browHeight > 0.45 && mouthOpen > 0.03) {
+                    detected = '😭';
+                } else if (browHeight > 0.45 && mouthWidth > 0.07) {
+                    detected = '🥳';
+                } else if (browHeight < 0.3 && mouthOpen < 0.02) {
+                    detected = '🤔';
+                } else if (Math.abs(mouthLeft.y - mouthRight.y) > 0.015) {
+                    detected = '😏';
+                } else if (browHeight > 0.4 && mouthOpen < 0.025) {
+                    detected = '🥺';
+                }
+
+                return detected;
+            }
+
+            // ============================================
+            // ۱۰. رسم نقاط روی صورت
+            // ============================================
+            function drawFaceMesh(results) {
+                canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+                if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                    const landmarks = results.multiFaceLandmarks[0];
+                    const w = canvasElement.width;
+                    const h = canvasElement.height;
+
+                    for (let i = 0; i < landmarks.length; i++) {
+                        const x = landmarks[i].x * w;
+                        const y = landmarks[i].y * h;
+
+                        let color = 'rgba(0, 255, 100, 0.4)';
+                        if (i >= 0 && i < 17) color = 'rgba(255, 100, 100, 0.6)';
+                        else if (i >= 33 && i < 133) color = 'rgba(100, 200, 255, 0.6)';
+                        else if (i >= 263 && i < 363) color = 'rgba(100, 200, 255, 0.6)';
+                        else if (i >= 61 && i < 78) color = 'rgba(255, 200, 100, 0.6)';
+                        else if (i >= 291 && i < 308) color = 'rgba(255, 200, 100, 0.6)';
+
+                        canvasCtx.beginPath();
+                        canvasCtx.arc(x, y, 2.5, 0, 2 * Math.PI);
+                        canvasCtx.fillStyle = color;
+                        canvasCtx.fill();
+                    }
+
+                    const eyeIndices = [
+                        [33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154, 153, 145, 144, 163, 7],
+                        [263, 466, 388, 387, 386, 385, 384, 398, 362, 382, 381, 380, 374, 373, 390, 249]
+                    ];
+
+                    canvasCtx.strokeStyle = 'rgba(0, 200, 255, 0.5)';
+                    canvasCtx.lineWidth = 1.5;
+
+                    eyeIndices.forEach(eye => {
+                        canvasCtx.beginPath();
+                        for (let i = 0; i < eye.length; i++) {
+                            const idx = eye[i];
+                            if (idx < landmarks.length) {
+                                const x = landmarks[idx].x * w;
+                                const y = landmarks[idx].y * h;
+                                if (i === 0) canvasCtx.moveTo(x, y);
+                                else canvasCtx.lineTo(x, y);
+                            }
+                        }
+                        canvasCtx.closePath();
+                        canvasCtx.stroke();
+                    });
+                }
+            }
+
+            // ============================================
+            // ۱۱. بروزرسانی بازی
+            // ============================================
+            function updateGameState(detected) {
+                if (!isDetecting) return;
+
+                lastDetected = detected;
+
+                let similarity = 0;
+
+                if (detected === currentEmoji) {
+                    similarity = 85 + Math.random() * 15;
+                } else if (
+                    (detected === '😀' && currentEmoji === '😜') ||
+                    (detected === '😜' && currentEmoji === '😀') ||
+                    (detected === '😮' && currentEmoji === '😭') ||
+                    (detected === '😭' && currentEmoji === '😮')
+                ) {
+                    similarity = 50 + Math.random() * 30;
+                } else if (detected !== '😐') {
+                    similarity = 20 + Math.random() * 30;
+                } else {
+                    similarity = Math.max(0, currentScore - 5);
+                }
+
+                currentScore = Math.min(100, Math.max(0, similarity));
+                scoreNumber.textContent = Math.round(currentScore);
+                scoreNumber.parentElement.className = 'score-popup';
+                setTimeout(() => {
+                    scoreNumber.parentElement.className = '';
+                }, 500);
+
+                if (currentScore > 80) {
+                    message.textContent = '🎉 عالی! ادامه بده!';
+                    message.className = 'success';
+                } else if (currentScore > 50) {
+                    message.textContent = `😊 خوبه! بیشتر شبیه ${currentEmoji} کن`;
+                    message.className = 'info';
+                } else if (currentScore > 20) {
+                    message.textContent = `🤔 سعی کن بیشتر شبیه ${currentEmoji} باشی`;
+                    message.className = '';
+                } else {
+                    message.textContent = `😅 حالت صورتت رو عوض کن!`;
+                    message.className = '';
+                }
+            }
+
+            // ============================================
+            // ۱۲. توابع بازی
+            // ============================================
+            function newRound() {
+                if (!isCameraActive || !isGameReady) {
+                    message.textContent = '⚠️ لطفاً ابتدا دوربین را فعال کنید';
+                    message.className = 'warning';
+                    return;
+                }
+
+                const newEmoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+                currentEmoji = newEmoji;
+                targetEmoji.textContent = currentEmoji;
+                targetEmoji.style.animation = 'none';
+                setTimeout(() => {
+                    targetEmoji.style.animation = 'pulse 1.5s infinite';
+                }, 10);
+
+                round++;
+                levelDisplay.textContent = `مرحله ${round}`;
+                isDetecting = true;
+                currentScore = 0;
+                scoreNumber.textContent = '۰';
+                message.textContent = `😊 حالت صورتت رو شبیه ${currentEmoji} کن!`;
+                message.className = 'info';
+            }
+
+            function captureScore() {
+                if (!isCameraActive || !isGameReady) {
+                    message.textContent = '⚠️ لطفاً ابتدا دوربین را فعال کنید';
+                    message.className = 'warning';
+                    return;
+                }
+
+                if (!isDetecting) {
+                    message.textContent = '⚠️ اول دکمه "ایموجی جدید" رو بزن!';
+                    message.className = 'error';
+                    return;
+                }
+
+                const finalScore = Math.round(currentScore);
+
+                history.push({
+                    emoji: currentEmoji,
+                    score: finalScore,
+                    time: new Date().toLocaleTimeString()
+                });
+
+                if (history.length > 10) {
+                    history = history.slice(-10);
+                }
+
+                if (finalScore > bestScore) {
+                    bestScore = finalScore;
+                    localStorage.setItem('faceMimicBest', bestScore.toString());
+                    message.textContent = `🏆 رکورد جدید! ${bestScore}%`;
+                    message.className = 'success';
+                } else {
+                    message.textContent = `📸 امتیاز ${finalScore}% ثبت شد`;
+                    message.className = 'info';
+                }
+
+                localStorage.setItem('faceMimicHistory', JSON.stringify(history));
+                updateHistoryUI();
+                updateBestUI();
+
+                setTimeout(() => {
+                    newRound();
+                }, 1500);
+            }
+
+            function resetGame() {
+                history = [];
+                bestScore = 0;
+                localStorage.removeItem('faceMimicHistory');
+                localStorage.removeItem('faceMimicBest');
+                round = 0;
+                currentScore = 0;
+                scoreNumber.textContent = '۰';
+                updateHistoryUI();
+                updateBestUI();
+                message.textContent = '🔄 بازی ریست شد! دکمه "ایموجی جدید" رو بزن';
+                message.className = 'info';
+                isDetecting = false;
+                targetEmoji.textContent = '😀';
+                levelDisplay.textContent = 'مرحله ۰';
+            }
+
+            // ============================================
+            // ۱۳. بروزرسانی UI تاریخچه
+            // ============================================
+            function updateHistoryUI() {
+                if (history.length === 0) {
+                    historyList.innerHTML =
+                        '<span style="color:#ccc; font-size:13px;">هنوز امتیازی ثبت نشده</span>';
+                    return;
+                }
+
+                historyList.innerHTML = history.map(item =>
+                    `<span class="history-item">
+                        <span class="h-emoji">${item.emoji}</span>
+                        <span class="h-score">${item.score}%</span>
+                    </span>`
+                ).join('');
+            }
+
+            function updateBestUI() {
+                bestScoreEl.textContent = `🏆 بهترین: ${bestScore}%`;
+            }
+
+            // ============================================
+            // ۱۴. رویدادهای دکمه‌ها
+            // ============================================
+            // دکمه درخواست دسترسی از داخل placeholder
+            requestCameraBtn.addEventListener('click', () => {
+                permissionOverlay.classList.add('active');
+            });
+
+            // دکمه اجازه در مودال
+            allowCameraBtn.addEventListener('click', async () => {
+                allowCameraBtn.disabled = true;
+                allowCameraBtn.textContent = '⏳ در حال اتصال...';
+                await requestCameraPermission();
+                allowCameraBtn.disabled = false;
+                allowCameraBtn.textContent = '📸 اجازه دسترسی';
+            });
+
+            // دکمه رد کردن در مودال
+            denyCameraBtn.addEventListener('click', () => {
+                permissionOverlay.classList.remove('active');
+                cameraStatus.textContent = '⛔ دسترسی به دوربین رد شد';
+                cameraStatus.className = 'camera-status error';
+                message.textContent = '⛔ برای بازی به دوربین نیاز داریم. دوباره امتحان کنید.';
+                message.className = 'error';
+                setButtonsEnabled(false);
+            });
+
+            // دکمه‌های بازی
+            startBtn.addEventListener('click', newRound);
+            captureBtn.addEventListener('click', captureScore);
+            resetBtn.addEventListener('click', resetGame);
+
+            // ============================================
+            // ۱۵. اجرای اصلی
+            // ============================================
+            async function init() {
+                // بارگذاری تاریخچه
+                updateHistoryUI();
+                updateBestUI();
+                levelDisplay.textContent = 'مرحله ۰';
+                setButtonsEnabled(false);
+
+                // بررسی اینکه آیا قبلاً دسترسی داده شده؟
+                // (با چک کردن localStorage یا嘗試 quick permission)
+                // برای امنیت، همیشه مودال را نشان می‌دهیم
+                setTimeout(() => {
+                    permissionOverlay.classList.add('active');
+                }, 500);
+
+                // همچنین اگر کاربر روی خارج از مودال کلیک کرد، چیزی نشود
+                permissionOverlay.addEventListener('click', (e) => {
+                    if (e.target === permissionOverlay) {
+                        // فقط اگر روی overlay کلیک کرد، کاری نکن
+                    }
+                });
+            }
+
+            // شروع
+            init();
+
+            // ============================================
+            // ۱۶. مدیریت خطاها و بستن
+            // ============================================
+            window.addEventListener('beforeunload', () => {
+                if (faceMesh) {
+                    faceMesh.close();
+                }
+                if (camera) {
+                    camera.stop();
+                }
+                if (videoElement.srcObject) {
+                    videoElement.srcObject.getTracks().forEach(track => track.stop());
+                }
+            });
+
+            // مدیریت خطای کلی
+            window.addEventListener('error', (e) => {
+                console.error('خطا:', e.message);
+                message.textContent = '⚠️ خطایی رخ داد! صفحه را رفرش کنید';
+                message.className = 'error';
+            });
+
+        })();
+    </script>
+
+</body>
+</html>
