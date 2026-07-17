@@ -520,7 +520,7 @@
             <div class="camera-request" id="cameraRequest">
                 <div class="icon">📷</div>
                 <h2>دسترسی به دوربین</h2>
-                <p>برای بازی کردن، لطفاً به دوربین دستگاه خود دسترسی بدهید.</p>
+                <p>برای بازی کردن، لطفاً به دوربین جلوی دستگاه خود دسترسی بدهید.</p>
                 <button class="btn-request" id="requestBtn">📷 درخواست دسترسی</button>
                 <p class="error-text" id="errorText">❌ دسترسی به دوربین امکان‌پذیر نیست. لطفاً از مرورگر دیگری استفاده کنید.</p>
             </div>
@@ -596,7 +596,7 @@
                 sceneMessage.className = 'scene-message';
             }
 
-            // ===== راه‌اندازی دوربین =====
+            // ===== راه‌اندازی دوربین جلو (سلفی) =====
             async function startCamera() {
                 try {
                     cameraRequest.classList.add('hidden');
@@ -604,7 +604,7 @@
 
                     const stream = await navigator.mediaDevices.getUserMedia({
                         video: {
-                            facingMode: 'environment',
+                            facingMode: 'user',
                             width: { ideal: 1920 },
                             height: { ideal: 1080 }
                         },
@@ -615,13 +615,37 @@
                     video.srcObject = stream;
                     await video.play();
                     cameraReady = true;
-                    console.log('📷 دوربین راه‌اندازی شد');
+                    console.log('📷 دوربین جلو (سلفی) راه‌اندازی شد');
 
                     resizeCanvas();
                     resetGame();
 
                 } catch (err) {
                     console.error('❌ خطای دوربین:', err);
+
+                    // تلاش با دوربین عقب به عنوان جایگزین
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({
+                            video: {
+                                facingMode: 'environment',
+                                width: { ideal: 1920 },
+                                height: { ideal: 1080 }
+                            },
+                            audio: false
+                        });
+
+                        cameraStream = stream;
+                        video.srcObject = stream;
+                        await video.play();
+                        cameraReady = true;
+                        console.log('📷 دوربین عقب به عنوان جایگزین راه‌اندازی شد');
+                        resizeCanvas();
+                        resetGame();
+                        return;
+                    } catch (err2) {
+                        console.error('❌ خطای دوربین عقب:', err2);
+                    }
+
                     cameraRequest.classList.remove('hidden');
                     errorText.classList.add('show');
                     cameraReady = false;
@@ -901,7 +925,7 @@
 
             // ===== شروع - نمایش درخواست دوربین =====
             cameraRequest.classList.remove('hidden');
-            console.log('🎮 منتظر دسترسی به دوربین...');
+            console.log('🎮 منتظر دسترسی به دوربین جلو (سلفی)...');
 
             setTimeout(() => {
                 if (!cameraReady) {
