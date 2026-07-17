@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>بازی رنگ‌آمیزی میوه</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #0a0a18;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: none;
+        }
+
+        .game-container {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            background: #14142a;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ===== هدر ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 14px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 50px;
+            margin-bottom: 10px;
+            border: 1px solid #ffffff10;
+            flex-shrink: 0;
+            z-index: 10;
+            backdrop-filter: blur(8px);
+        }
+
+        .moves-box {
+            background: #e94560;
+            padding: 6px 16px;
+            border-radius: 40px;
+            color: #fff;
+            font-weight: bold;
+            font-size: clamp(0.8rem, 2vw, 1.1rem);
+            box-shadow: 0 0 25px #e9456040;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .progress-box {
+            background: #0f3460;
+            padding: 6px 16px;
+            border-radius: 40px;
+            color: #7ec8e3;
+            font-weight: bold;
+            font-size: clamp(0.8rem, 2vw, 1.1rem);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ===== نشانگر شانس ===== */
+        .chances-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .chance-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #e94560;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.3s;
+            box-shadow: 0 0 12px #e9456040;
+        }
+
+        .chance-dot.used {
+            background: #2a2a4a;
+            border-color: #3a3a5a;
+            box-shadow: none;
+            opacity: 0.3;
+        }
+
+        /* ===== دوربین کاربر - فول سایز ===== */
+        .camera-wrapper {
+            position: relative;
+            flex: 1;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid #0f3460;
+            background: #000;
+            min-height: 0;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            transform: scaleX(-1);
+        }
+
+        .camera-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.15);
+            z-index: 1;
+            pointer-events: none;
+            border-radius: 20px;
+        }
+
+        .camera-overlay::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(45deg,
+                    rgba(255, 255, 255, 0.015) 0px,
+                    rgba(255, 255, 255, 0.015) 3px,
+                    transparent 3px,
+                    transparent 8px);
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 20px;
+        }
+
+        /* ===== میوه ===== */
+        .fruit-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        #fruitCanvas {
+            width: 75%;
+            height: 75%;
+            border-radius: 50%;
+            display: block;
+            cursor: pointer;
+            touch-action: none;
+            box-shadow: 0 0 60px rgba(212, 172, 13, 0.2), 0 0 120px rgba(0, 0, 0, 0.5);
+            transition: transform 0.08s;
+            background: radial-gradient(circle at 40% 35%, #f7dc6f, #d4ac0d);
+            position: relative;
+            z-index: 3;
+            aspect-ratio: 1/1;
+            pointer-events: auto;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #fruitCanvas:active {
+            transform: scale(0.95);
+        }
+
+        /* ===== فرچه بزرگ زیر میوه ===== */
+        .brush-container {
+            position: absolute;
+            bottom: -4%;
+            left: 0;
+            width: 100%;
+            height: 35%;
+            z-index: 4;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            overflow: visible;
+        }
+
+        .giant-brush {
+            position: absolute;
+            width: clamp(70px, 16vw, 130px);
+            height: clamp(70px, 16vw, 130px);
+            background: radial-gradient(circle at 35% 30%, #ff6b6b, #b71c1c);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            box-shadow: 0 0 80px #ff6b6b80, 0 8px 30px rgba(0, 0, 0, 0.8);
+            border: 4px solid #ffffff50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            animation: autoMove 3.5s ease-in-out infinite alternate;
+            transition: width 0.3s, height 0.3s;
+        }
+
+        .giant-brush .icon {
+            font-size: clamp(36px, 9vw, 64px);
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+            transform: rotate(-20deg);
+        }
+
+        .brush-beam {
+            position: absolute;
+            width: clamp(5px, 1.2vw, 8px);
+            height: 400%;
+            background: linear-gradient(to bottom,
+                    transparent 0%,
+                    rgba(255, 107, 107, 0.3) 15%,
+                    rgba(255, 107, 107, 0.9) 35%,
+                    #ff6b6b 50%,
+                    rgba(255, 107, 107, 0.9) 65%,
+                    rgba(255, 107, 107, 0.3) 85%,
+                    transparent 100%);
+            box-shadow: 0 0 60px #ff6b6b80, 0 0 120px #ff6b6b40;
+            border-radius: 10px;
+            pointer-events: none;
+            animation: autoMove 3.5s ease-in-out infinite alternate;
+            transform: none !important;
+            bottom: 0;
+            left: 50%;
+            margin-left: -3px;
+        }
+
+        @keyframes autoMove {
+            0% {
+                left: 3%;
+            }
+            100% {
+                left: 94%;
+            }
+        }
+
+        /* ===== پیام برد/باخت روی صحنه ===== */
+        .scene-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            font-size: clamp(2.5rem, 10vw, 5rem);
+            font-weight: 900;
+            text-align: center;
+            padding: 20px 40px;
+            border-radius: 30px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .scene-message.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .scene-message.win {
+            background: rgba(39, 174, 96, 0.85);
+            color: #fff;
+            border-color: #2ecc71;
+            box-shadow: 0 0 80px rgba(39, 174, 96, 0.5);
+        }
+
+        .scene-message.lose {
+            background: rgba(231, 76, 60, 0.85);
+            color: #fff;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 80px rgba(231, 76, 60, 0.5);
+        }
+
+        .scene-message .sub {
+            font-size: clamp(0.8rem, 3vw, 1.5rem);
+            font-weight: 400;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+
+        /* ===== درخواست دوربین ===== */
+        .camera-request {
+            position: absolute;
+            inset: 0;
+            z-index: 30;
+            background: rgba(0, 0, 0, 0.92);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            gap: 20px;
+        }
+
+        .camera-request.hidden {
+            display: none;
+        }
+
+        .camera-request .icon {
+            font-size: clamp(4rem, 15vw, 8rem);
+        }
+
+        .camera-request h2 {
+            color: #fff;
+            font-size: clamp(1.2rem, 4vw, 2.2rem);
+            font-weight: 700;
+        }
+
+        .camera-request p {
+            color: #aaa;
+            font-size: clamp(0.9rem, 2.5vw, 1.3rem);
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        .camera-request .btn-request {
+            background: #e94560;
+            border: none;
+            color: #fff;
+            padding: 16px 48px;
+            border-radius: 50px;
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 0 40px #e9456040;
+            touch-action: manipulation;
+        }
+
+        .camera-request .btn-request:active {
+            transform: scale(0.94);
+        }
+
+        .camera-request .error-text {
+            color: #e74c3c;
+            font-size: clamp(0.8rem, 2vw, 1.1rem);
+            display: none;
+        }
+
+        .camera-request .error-text.show {
+            display: block;
+        }
+
+        /* ===== نوار پایین ===== */
+        .bottom-bar {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .move-btn {
+            background: #e94560;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: clamp(0.8rem, 2vw, 1rem);
+            cursor: pointer;
+            touch-action: manipulation;
+            box-shadow: 0 0 20px #e9456040;
+            flex: 1;
+            min-height: 44px;
+            transition: 0.1s;
+        }
+
+        .move-btn:active {
+            transform: scale(0.94);
+            background: #ff6b81;
+        }
+
+        .reset-btn {
+            background: #0f3460;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: clamp(0.8rem, 2vw, 1rem);
+            cursor: pointer;
+            touch-action: manipulation;
+            flex: 1;
+            min-height: 44px;
+            transition: 0.1s;
+        }
+
+        .reset-btn:active {
+            transform: scale(0.94);
+            background: #1a4a7a;
+        }
+
+        .status-badge {
+            color: #7ec8e3;
+            font-size: clamp(0.65rem, 1.6vw, 0.85rem);
+            text-align: center;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 4px 12px;
+            border-radius: 30px;
+            border: 1px solid #ffffff15;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            min-height: 44px;
+        }
+
+        /* ===== واکنش‌گرایی ===== */
+        @media (max-width: 400px) {
+            .game-container {
+                padding: 6px;
+            }
+            .header {
+                padding: 5px 10px;
+                margin-bottom: 6px;
+            }
+            .moves-box,
+            .progress-box {
+                padding: 4px 10px;
+                font-size: 0.7rem;
+                min-width: 45px;
+            }
+            .chance-dot {
+                width: 8px;
+                height: 8px;
+            }
+            .giant-brush {
+                width: 55px;
+                height: 55px;
+            }
+            .giant-brush .icon {
+                font-size: 28px;
+            }
+            .brush-beam {
+                width: 4px;
+            }
+            .move-btn,
+            .reset-btn {
+                font-size: 0.7rem;
+                padding: 8px 12px;
+                min-height: 36px;
+            }
+            .status-badge {
+                font-size: 0.6rem;
+                padding: 4px 8px;
+                min-height: 36px;
+            }
+            #fruitCanvas {
+                width: 70%;
+                height: 70%;
+            }
+        }
+
+        @media (min-width: 800px) {
+            .game-container {
+                padding: 16px 20px;
+            }
+            .header {
+                padding: 12px 20px;
+            }
+            #fruitCanvas {
+                width: 70%;
+                height: 70%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+
+        <!-- هدر -->
+        <div class="header">
+            <span class="moves-box" id="movesDisplay">۰ / ۵</span>
+            <div class="header-right">
+                <div class="chances-indicator" id="chancesIndicator">
+                    <span class="chance-dot" id="dot1"></span>
+                    <span class="chance-dot" id="dot2"></span>
+                    <span class="chance-dot" id="dot3"></span>
+                    <span class="chance-dot" id="dot4"></span>
+                    <span class="chance-dot" id="dot5"></span>
+                </div>
+                <span class="progress-box" id="progressDisplay">۰٪</span>
+            </div>
+        </div>
+
+        <!-- دوربین + میوه -->
+        <div class="camera-wrapper" id="cameraWrapper">
+            <video id="video" autoplay playsinline muted></video>
+            <div class="camera-overlay"></div>
+
+            <!-- درخواست دوربین -->
+            <div class="camera-request" id="cameraRequest">
+                <div class="icon">📷</div>
+                <h2>دسترسی به دوربین</h2>
+                <p>برای بازی کردن، لطفاً به دوربین دستگاه خود دسترسی بدهید.</p>
+                <button class="btn-request" id="requestBtn">📷 درخواست دسترسی</button>
+                <p class="error-text" id="errorText">❌ دسترسی به دوربین امکان‌پذیر نیست. لطفاً از مرورگر دیگری استفاده کنید.</p>
+            </div>
+
+            <!-- پیام برد/باخت روی صحنه -->
+            <div class="scene-message" id="sceneMessage">
+                <div id="sceneMessageText"></div>
+                <div class="sub" id="sceneMessageSub"></div>
+            </div>
+
+            <div class="fruit-wrapper">
+                <canvas id="fruitCanvas"></canvas>
+
+                <div class="brush-container" id="brushContainer">
+                    <div class="brush-beam" id="brushBeam"></div>
+                    <div class="giant-brush" id="giantBrush">
+                        <span class="icon">🖌️</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- نوار پایین -->
+        <div class="bottom-bar">
+            <span class="status-badge">↔ خودکار</span>
+            <button class="move-btn" id="moveBtn">🎯 رنگ کن</button>
+            <button class="reset-btn" id="resetBtn">⟳ شروع</button>
+        </div>
+
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ===== عناصر =====
+            const canvas = document.getElementById('fruitCanvas');
+            const ctx = canvas.getContext('2d');
+            const video = document.getElementById('video');
+            const movesDisplay = document.getElementById('movesDisplay');
+            const progressDisplay = document.getElementById('progressDisplay');
+            const resetBtn = document.getElementById('resetBtn');
+            const moveBtn = document.getElementById('moveBtn');
+            const giantBrush = document.getElementById('giantBrush');
+            const brushBeam = document.getElementById('brushBeam');
+            const cameraRequest = document.getElementById('cameraRequest');
+            const requestBtn = document.getElementById('requestBtn');
+            const errorText = document.getElementById('errorText');
+            const sceneMessage = document.getElementById('sceneMessage');
+            const sceneMessageText = document.getElementById('sceneMessageText');
+            const sceneMessageSub = document.getElementById('sceneMessageSub');
+
+            // ===== تنظیمات =====
+            const TOTAL_MOVES = 5;
+            const WIN_PERCENT = 90;
+
+            // ===== متغیرها =====
+            let SIZE, RADIUS, BRUSH_WIDTH;
+            let painted = [];
+            let movesUsed = 0;
+            let gameOver = false;
+            let cameraReady = false;
+            let cameraStream = null;
+
+            // ===== نمایش پیام روی صحنه =====
+            function showSceneMessage(type, title, sub) {
+                sceneMessage.className = 'scene-message show ' + type;
+                sceneMessageText.textContent = title;
+                sceneMessageSub.textContent = sub || '';
+            }
+
+            function hideSceneMessage() {
+                sceneMessage.className = 'scene-message';
+            }
+
+            // ===== راه‌اندازی دوربین =====
+            async function startCamera() {
+                try {
+                    cameraRequest.classList.add('hidden');
+                    errorText.classList.remove('show');
+
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: 'environment',
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        },
+                        audio: false
+                    });
+
+                    cameraStream = stream;
+                    video.srcObject = stream;
+                    await video.play();
+                    cameraReady = true;
+                    console.log('📷 دوربین راه‌اندازی شد');
+
+                    // شروع بازی
+                    resizeCanvas();
+                    resetGame();
+
+                } catch (err) {
+                    console.error('❌ خطای دوربین:', err);
+                    cameraRequest.classList.remove('hidden');
+                    errorText.classList.add('show');
+                    cameraReady = false;
+                }
+            }
+
+            // ===== درخواست دوربین =====
+            requestBtn.addEventListener('click', startCamera);
+            requestBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                startCamera();
+            }, { passive: false });
+
+            // ===== به‌روزرسانی نشانگر شانس =====
+            function updateChances() {
+                for (let i = 1; i <= 5; i++) {
+                    const dot = document.getElementById('dot' + i);
+                    if (dot) {
+                        dot.classList.toggle('used', i <= movesUsed);
+                    }
+                }
+            }
+
+            // ===== محاسبه اندازه‌ها =====
+            function calculateSizes() {
+                const containerWidth = canvas.parentElement?.clientWidth || 400;
+                const containerHeight = canvas.parentElement?.clientHeight || 400;
+                const size = Math.min(containerWidth * 0.78, containerHeight * 0.78, 500);
+                SIZE = Math.round(size);
+                RADIUS = Math.round(SIZE * 0.38);
+                BRUSH_WIDTH = Math.round(SIZE * 0.25);
+                return { SIZE, RADIUS, BRUSH_WIDTH };
+            }
+
+            // ===== مقداردهی =====
+            function initPainted() {
+                const { SIZE } = calculateSizes();
+                painted = [];
+                for (let x = 0; x < SIZE; x++) {
+                    painted[x] = new Array(SIZE).fill(false);
+                }
+            }
+            initPainted();
+
+            // ===== تنظیم اندازه کانوس =====
+            function resizeCanvas() {
+                const { SIZE } = calculateSizes();
+                canvas.width = SIZE;
+                canvas.height = SIZE;
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                drawFruit();
+            }
+
+            // ===== محاسبه درصد =====
+            function calcProgress() {
+                const { SIZE, RADIUS } = calculateSizes();
+                let total = 0,
+                    colored = 0;
+                const cx = SIZE / 2,
+                    cy = SIZE / 2,
+                    r = RADIUS;
+                for (let x = 0; x < SIZE; x++) {
+                    for (let y = 0; y < SIZE; y++) {
+                        const dx = x - cx,
+                            dy = y - cy;
+                        if (dx * dx + dy * dy <= r * r) {
+                            total++;
+                            if (painted[x] && painted[x][y]) colored++;
+                        }
+                    }
+                }
+                return total === 0 ? 0 : Math.round((colored / total) * 100);
+            }
+
+            // ===== گرفتن موقعیت فعلی فرچه =====
+            function getBrushPosition() {
+                const parentRect = brushBeam.parentElement?.getBoundingClientRect() || { left: 0, width: 400 };
+                const rect = brushBeam.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const x = (centerX - parentRect.left) / parentRect.width;
+                return Math.max(0, Math.min(1, x));
+            }
+
+            // ===== رنگ‌آمیزی =====
+            function doPaint() {
+                if (!cameraReady) {
+                    cameraRequest.classList.remove('hidden');
+                    return;
+                }
+                if (gameOver) return;
+                if (movesUsed >= TOTAL_MOVES) {
+                    gameOver = true;
+                    showSceneMessage('lose', '❌ باخت!', `فقط ${calcProgress()}% شد`);
+                    return;
+                }
+
+                const { SIZE, RADIUS, BRUSH_WIDTH } = calculateSizes();
+                const cx = SIZE / 2,
+                    cy = SIZE / 2,
+                    r = RADIUS;
+
+                const brushPos = getBrushPosition();
+                const fx = brushPos * SIZE;
+                const fy = SIZE / 2;
+                const half = Math.floor(BRUSH_WIDTH / 2);
+
+                for (let t = -Math.round(SIZE * 0.55); t < Math.round(SIZE * 0.55); t++) {
+                    for (let w = -half; w <= half; w++) {
+                        const px = Math.round(fx + w * 0.6);
+                        const py = Math.round(fy + t * 0.8);
+                        if (px >= 0 && px < SIZE && py >= 0 && py < SIZE) {
+                            const dx = px - cx,
+                                dy = py - cy;
+                            if (dx * dx + dy * dy <= r * r) {
+                                if (!painted[px]) painted[px] = [];
+                                painted[px][py] = true;
+                            }
+                        }
+                    }
+                }
+
+                movesUsed++;
+                movesDisplay.textContent = `${movesUsed} / ${TOTAL_MOVES}`;
+                updateChances();
+                drawFruit();
+
+                const prog = calcProgress();
+                if (movesUsed >= TOTAL_MOVES && prog < WIN_PERCENT) {
+                    gameOver = true;
+                    showSceneMessage('lose', '❌ باخت!', `فقط ${prog}% شد`);
+                }
+            }
+
+            // ===== رسم میوه =====
+            function drawFruit() {
+                const { SIZE, RADIUS } = calculateSizes();
+                ctx.clearRect(0, 0, SIZE, SIZE);
+                const cx = SIZE / 2,
+                    cy = SIZE / 2,
+                    r = RADIUS;
+
+                const grad = ctx.createRadialGradient(cx - SIZE * 0.08, cy - SIZE * 0.08, SIZE * 0.03, cx, cy, r);
+                grad.addColorStop(0, '#fdebd0');
+                grad.addColorStop(0.3, '#f5cba7');
+                grad.addColorStop(0.7, '#e8b86d');
+                grad.addColorStop(1, '#c9963a');
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.shadowColor = '#f1c40f20';
+                ctx.shadowBlur = SIZE * 0.05;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                for (let i = 0; i < 12; i++) {
+                    const a = Math.random() * Math.PI * 2;
+                    const d = Math.random() * r * 0.65;
+                    const x = cx + Math.cos(a) * d;
+                    const y = cy + Math.sin(a) * d;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 2 + Math.random() * 4, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(160, 100, 30, ${0.04 + Math.random() * 0.08})`;
+                    ctx.fill();
+                }
+
+                const leafSize = SIZE * 0.05;
+                ctx.fillStyle = '#27ae60';
+                ctx.shadowBlur = SIZE * 0.03;
+                ctx.shadowColor = '#27ae6040';
+                ctx.beginPath();
+                ctx.ellipse(cx + SIZE * 0.05, cy - r + SIZE * 0.05, leafSize, leafSize * 0.5, 0.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#2ecc71';
+                ctx.beginPath();
+                ctx.ellipse(cx + SIZE * 0.08, cy - r + SIZE * 0.03, leafSize * 0.7, leafSize * 0.35, -0.2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                const imgData = ctx.getImageData(0, 0, SIZE, SIZE);
+                const data = imgData.data;
+                for (let x = 0; x < SIZE; x++) {
+                    for (let y = 0; y < SIZE; y++) {
+                        const dx = x - cx,
+                            dy = y - cy;
+                        if (dx * dx + dy * dy <= r * r && painted[x] && painted[x][y]) {
+                            const idx = (y * SIZE + x) * 4;
+                            data[idx] = Math.min(255, data[idx] + 90);
+                            data[idx + 1] = Math.min(255, data[idx + 1] + 35);
+                            data[idx + 2] = Math.min(255, data[idx + 2] + 190);
+                            data[idx + 3] = 235;
+                        }
+                    }
+                }
+                ctx.putImageData(imgData, 0, 0);
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                const progress = calcProgress();
+                progressDisplay.textContent = progress + '%';
+
+                if (progress >= WIN_PERCENT && !gameOver) {
+                    gameOver = true;
+                    showSceneMessage('win', '🎉 برد! 🎉', `${progress}% از میوه رنگ شد`);
+                }
+            }
+
+            // ===== ریست =====
+            function resetGame() {
+                if (!cameraReady) {
+                    cameraRequest.classList.remove('hidden');
+                    return;
+                }
+                const { SIZE } = calculateSizes();
+                painted = [];
+                for (let x = 0; x < SIZE; x++) {
+                    painted[x] = new Array(SIZE).fill(false);
+                }
+                movesUsed = 0;
+                gameOver = false;
+                movesDisplay.textContent = `۰ / ${TOTAL_MOVES}`;
+                updateChances();
+                hideSceneMessage();
+
+                brushBeam.style.animation = 'none';
+                brushBeam.offsetHeight;
+                brushBeam.style.animation = 'autoMove 3.5s ease-in-out infinite alternate';
+                giantBrush.style.animation = 'none';
+                giantBrush.offsetHeight;
+                giantBrush.style.animation = 'autoMove 3.5s ease-in-out infinite alternate';
+
+                drawFruit();
+            }
+
+            // ============================================================
+            // ===== رویدادها =====
+            // ============================================================
+
+            canvas.addEventListener('click', doPaint);
+            canvas.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                doPaint();
+            }, { passive: false });
+
+            moveBtn.addEventListener('click', doPaint);
+            moveBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                doPaint();
+            }, { passive: false });
+
+            resetBtn.addEventListener('click', resetGame);
+            resetBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                resetGame();
+            }, { passive: false });
+
+            let resizeTimeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    if (cameraReady) resizeCanvas();
+                }, 100);
+            });
+
+            document.addEventListener('touchmove', function(e) {
+                if (e.target.closest('.game-container')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            // ===== شروع - نمایش درخواست دوربین =====
+            cameraRequest.classList.remove('hidden');
+            console.log('🎮 منتظر دسترسی به دوربین...');
+
+            // بررسی خودکار درخواست
+            setTimeout(() => {
+                if (!cameraReady) {
+                    startCamera();
+                }
+            }, 500);
+        })();
+    </script>
+
+</body>
+</html>
