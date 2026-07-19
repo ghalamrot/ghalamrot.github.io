@@ -6,21 +6,31 @@
     <title>مسابقه موبایل</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            overflow: hidden; 
-            background: #000;
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
-        }
+        body { overflow: hidden; background: #000; touch-action: none; user-select: none; }
         
-        #gameCanvas {
-            width: 100vw;
-            height: 100vh;
-            display: block;
+        #gameCanvas { width: 100vw; height: 100vh; display: block; }
+        
+        /* ===== پیام خطا ===== */
+        #error-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: #ff6b6b;
+            padding: 30px 40px;
+            border-radius: 15px;
+            border: 2px solid #ff6b6b;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            z-index: 100;
+            max-width: 90%;
+            display: none;
         }
-
-        /* ===== کنترل‌های لمسی ===== */
+        #error-box h2 { color: #ff6b6b; margin-bottom: 15px; }
+        #error-box p { color: #ddd; font-size: 14px; line-height: 1.6; }
+        #error-box .hint { color: #ffd93d; font-size: 13px; margin-top: 10px; }
+        
         #controls {
             position: fixed;
             bottom: 20px;
@@ -32,17 +42,9 @@
             z-index: 10;
             pointer-events: none;
         }
-
-        .control-group {
-            display: flex;
-            gap: 15px;
-            pointer-events: auto;
-        }
-
+        .control-group { display: flex; gap: 15px; pointer-events: auto; }
         .ctrl-btn {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
+            width: 70px; height: 70px; border-radius: 50%;
             border: 3px solid rgba(255,255,255,0.6);
             background: rgba(255,255,255,0.15);
             backdrop-filter: blur(5px);
@@ -51,28 +53,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
             touch-action: none;
             -webkit-tap-highlight-color: transparent;
         }
-
-        .ctrl-btn:active {
-            transform: scale(0.85);
-            background: rgba(255,255,255,0.3);
-        }
-
-        .ctrl-btn.wide {
-            width: 100px;
-            border-radius: 35px;
-            font-size: 16px;
-            letter-spacing: 1px;
-        }
-
-        #left-group { gap: 10px; }
-        #right-group { gap: 10px; }
-
-        /* ===== HUD ===== */
+        .ctrl-btn:active { transform: scale(0.85); background: rgba(255,255,255,0.3); }
+        .ctrl-btn.wide { width: 100px; border-radius: 35px; font-size: 16px; }
+        
         #speed-display {
             position: fixed;
             top: 15px;
@@ -83,72 +69,48 @@
             background: rgba(0,0,0,0.7);
             padding: 8px 16px;
             border-radius: 20px;
-            border: 1px solid rgba(0,255,136,0.3);
             z-index: 10;
-            backdrop-filter: blur(5px);
-            text-shadow: 0 0 10px rgba(0,255,136,0.3);
         }
-
         #reset-btn {
             position: fixed;
             top: 15px;
             left: 15px;
-            width: 44px;
-            height: 44px;
+            width: 44px; height: 44px;
             border-radius: 50%;
             background: rgba(255,50,50,0.3);
             border: 2px solid rgba(255,50,50,0.6);
             color: white;
             font-size: 20px;
             z-index: 10;
-            backdrop-filter: blur(5px);
-            touch-action: none;
-            -webkit-tap-highlight-color: transparent;
         }
-
-        #reset-btn:active {
-            transform: scale(0.85);
-            background: rgba(255,50,50,0.6);
-        }
-
-        /* ===== حالت افقی ===== */
-        @media (orientation: landscape) {
-            .ctrl-btn {
-                width: 60px;
-                height: 60px;
-                font-size: 24px;
-            }
-            .ctrl-btn.wide {
-                width: 80px;
-                font-size: 14px;
-            }
-        }
-
-        /* ===== تلفن‌های کوچک ===== */
-        @media (max-width: 400px) {
-            .ctrl-btn {
-                width: 55px;
-                height: 55px;
-                font-size: 20px;
-            }
-            .ctrl-btn.wide {
-                width: 70px;
-                font-size: 12px;
-            }
-            #speed-display {
-                font-size: 14px;
-                padding: 5px 12px;
-            }
+        #loading-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: Arial;
+            font-size: 20px;
+            z-index: 5;
+            background: rgba(0,0,0,0.7);
+            padding: 20px 40px;
+            border-radius: 10px;
         }
     </style>
 </head>
 <body>
 
-    <!-- HUD -->
+    <div id="loading-text">⏳ در حال بارگذاری ماشین...</div>
+    <div id="error-box">
+        <h2>❌ خطا در بارگذاری</h2>
+        <p id="error-message">مشخص نشده</p>
+        <p class="hint">💡 راه‌حل: فایل car.glb را در کنار این فایل قرار دهید</p>
+        <p class="hint" style="margin-top:5px;">📁 ساختار: index.html و car.glb در یک پوشه</p>
+    </div>
+
     <div id="speed-display">🚗 0 km/h</div>
     <button id="reset-btn">⟳</button>
 
-    <!-- کنترل‌های لمسی -->
     <div id="controls">
         <div class="control-group" id="left-group">
             <button class="ctrl-btn" id="btn-left">◀</button>
@@ -166,51 +128,41 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 
     <script>
-        // ===== تنظیمات اولیه =====
+        // ===== نمایش خطا =====
+        function showError(message) {
+            document.getElementById('loading-text').style.display = 'none';
+            const box = document.getElementById('error-box');
+            document.getElementById('error-message').textContent = message;
+            box.style.display = 'block';
+        }
+
+        // ===== تنظیمات =====
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x1a2a3a);
-        scene.fog = new THREE.Fog(0x1a2a3a, 30, 60);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
         
-        const renderer = new THREE.WebGLRenderer({ 
-            antialias: true,
-            powerPreference: "high-performance"
-        });
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.prepend(renderer.domElement);
 
-        // ===== نورپردازی =====
+        // ===== نور =====
         const ambientLight = new THREE.AmbientLight(0x406080, 0.6);
         scene.add(ambientLight);
 
         const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
         dirLight.position.set(10, 25, 10);
         dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 1024;
-        dirLight.shadow.mapSize.height = 1024;
-        const d = 30;
-        dirLight.shadow.camera.left = -d;
-        dirLight.shadow.camera.right = d;
-        dirLight.shadow.camera.top = d;
-        dirLight.shadow.camera.bottom = -d;
-        dirLight.shadow.camera.near = 1;
-        dirLight.shadow.camera.far = 50;
         scene.add(dirLight);
 
         const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x2c3e50, 0.8);
         scene.add(hemiLight);
 
-        // ===== زمین با بافت =====
+        // ===== زمین =====
         const groundGeometry = new THREE.PlaneGeometry(120, 120);
-        const groundMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x2a3a4a,
-            roughness: 0.9,
-            metalness: 0.1
-        });
+        const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x2a3a4a, roughness: 0.9 });
         const ground = new THREE.Mesh(groundGeometry, groundMaterial);
         ground.rotation.x = -Math.PI / 2;
         ground.position.y = -0.5;
@@ -220,33 +172,11 @@
         // خطوط جاده
         for (let i = -55; i < 55; i += 4) {
             const lineGeo = new THREE.PlaneGeometry(0.2, 1.5);
-            const lineMat = new THREE.MeshStandardMaterial({ 
-                color: 0x88aacc,
-                emissive: 0x223344,
-                emissiveIntensity: 0.3
-            });
+            const lineMat = new THREE.MeshStandardMaterial({ color: 0x88aacc });
             const line = new THREE.Mesh(lineGeo, lineMat);
             line.rotation.x = -Math.PI / 2;
             line.position.set(i, -0.49, 0);
             scene.add(line);
-        }
-
-        // درخت‌های ساده برای حس سرعت
-        for (let i = -50; i < 50; i += 10) {
-            if (Math.abs(i) < 3) continue;
-            const trunk = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.2, 0.3, 1),
-                new THREE.MeshStandardMaterial({ color: 0x5d4037 })
-            );
-            trunk.position.set(i, 0, -8);
-            scene.add(trunk);
-            
-            const leaves = new THREE.Mesh(
-                new THREE.ConeGeometry(0.8, 1.2, 6),
-                new THREE.MeshStandardMaterial({ color: 0x2e7d32 })
-            );
-            leaves.position.set(i, 1.2, -8);
-            scene.add(leaves);
         }
 
         // ===== فیزیک =====
@@ -260,7 +190,7 @@
         groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
         world.addBody(groundBody);
 
-        // ===== متغیرهای ماشین =====
+        // ===== متغیرها =====
         let carMesh = null;
         let carBody = null;
         let speed = 0;
@@ -269,55 +199,75 @@
         const braking = 8;
         const turnSpeed = 2.8;
         const friction = 0.96;
+        let carLoaded = false;
 
-        // ===== بارگذاری ماشین =====
+        // ===== تلاش برای بارگذاری ماشین =====
+        console.log('🔍 شروع بارگذاری car.glb...');
+        
         const loader = new THREE.GLTFLoader();
-        loader.load('car.glb', function(gltf) {
-            carMesh = gltf.scene;
-            carMesh.scale.set(0.8, 0.8, 0.8);
-            carMesh.castShadow = true;
-            scene.add(carMesh);
+        
+        // ⭐ روش اول: مسیر مستقیم
+        loader.load('car.glb', 
+            function(gltf) {
+                // ✅ موفقیت
+                console.log('✅ ماشین با موفقیت بارگذاری شد!');
+                document.getElementById('loading-text').style.display = 'none';
+                
+                carMesh = gltf.scene;
+                carMesh.scale.set(0.8, 0.8, 0.8);
+                carMesh.castShadow = true;
+                scene.add(carMesh);
 
-            const boxShape = new CANNON.Box(new CANNON.Vec3(0.8, 0.25, 0.4));
-            carBody = new CANNON.Body({ mass: 120 });
-            carBody.addShape(boxShape);
-            carBody.position.set(0, 0.5, 0);
-            world.addBody(carBody);
+                const boxShape = new CANNON.Box(new CANNON.Vec3(0.8, 0.25, 0.4));
+                carBody = new CANNON.Body({ mass: 120 });
+                carBody.addShape(boxShape);
+                carBody.position.set(0, 0.5, 0);
+                world.addBody(carBody);
 
-            camera.position.set(0, 3.5, 6);
-            
-            // لرزش موتور (اختیاری)
-            if (navigator.vibrate) {
-                navigator.vibrate(50);
+                camera.position.set(0, 3.5, 6);
+                carLoaded = true;
+                
+                if (navigator.vibrate) navigator.vibrate(50);
+            },
+            function(xhr) {
+                // 📊 پیشرفت
+                const progress = (xhr.loaded / xhr.total * 100).toFixed(0);
+                console.log(`📊 بارگذاری: ${progress}%`);
+                document.getElementById('loading-text').textContent = `⏳ بارگذاری ${progress}%`;
+            },
+            function(error) {
+                // ❌ خطا
+                console.error('❌ خطا:', error);
+                
+                // ⭐ روش دوم: تلاش با مسیر ./ 
+                console.log('🔄 تلاش مجدد با مسیر ./car.glb');
+                loader.load('./car.glb', 
+                    function(gltf) {
+                        console.log('✅ بارگذاری با مسیر ./ موفق بود!');
+                        document.getElementById('loading-text').style.display = 'none';
+                        carMesh = gltf.scene;
+                        carMesh.scale.set(0.8, 0.8, 0.8);
+                        scene.add(carMesh);
+                        // ... بقیه کد
+                    },
+                    undefined,
+                    function() {
+                        // ❌ باز هم خطا
+                        showError('فایل car.glb پیدا نشد!');
+                    }
+                );
             }
-        }, undefined, function(error) {
-            alert('⚠️ فایل car.glb را در کنار این صفحه قرار دهید!');
-            console.error(error);
-        });
+        );
 
-        // ===== کنترل‌های لمسی =====
+        // ===== کنترل‌ها =====
         const touchState = { gas: false, brake: false, left: false, right: false };
 
         function setupTouchButton(id, stateKey) {
             const el = document.getElementById(id);
             if (!el) return;
-            
-            el.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                touchState[stateKey] = true;
-                if (stateKey === 'gas' && navigator.vibrate) navigator.vibrate(10);
-            }, { passive: false });
-            
-            el.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                touchState[stateKey] = false;
-            }, { passive: false });
-            
-            el.addEventListener('touchcancel', (e) => {
-                touchState[stateKey] = false;
-            });
-            
-            // پشتیبانی از ماوس (برای تست در دسکتاپ)
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); touchState[stateKey] = true; }, { passive: false });
+            el.addEventListener('touchend', (e) => { e.preventDefault(); touchState[stateKey] = false; }, { passive: false });
+            el.addEventListener('touchcancel', () => { touchState[stateKey] = false; });
             el.addEventListener('mousedown', () => touchState[stateKey] = true);
             el.addEventListener('mouseup', () => touchState[stateKey] = false);
             el.addEventListener('mouseleave', () => touchState[stateKey] = false);
@@ -329,10 +279,7 @@
         setupTouchButton('btn-right', 'right');
 
         document.getElementById('reset-btn').addEventListener('click', resetCar);
-        document.getElementById('reset-btn').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            resetCar();
-        });
+        document.getElementById('reset-btn').addEventListener('touchstart', (e) => { e.preventDefault(); resetCar(); });
 
         function resetCar() {
             if (carBody) {
@@ -345,9 +292,8 @@
             }
         }
 
-        // ===== حلقه بازی (بهینه برای موبایل) =====
+        // ===== حلقه بازی =====
         let lastTime = 0;
-        const targetDelta = 1/60;
 
         function animate(time) {
             requestAnimationFrame(animate);
@@ -355,30 +301,25 @@
             let delta = Math.min((time - lastTime) / 1000, 0.05);
             lastTime = time;
 
-            if (carBody && carMesh) {
-                // ===== کنترل از روی دکمه‌ها =====
+            if (carBody && carMesh && carLoaded) {
                 const forward = new CANNON.Vec3(0, 0, -1);
                 forward.applyQuaternion(carBody.quaternion);
 
-                // گاز
                 if (touchState.gas) {
                     speed += acceleration * delta;
                     if (speed > maxSpeed) speed = maxSpeed;
                 }
                 
-                // ترمز
                 if (touchState.brake) {
                     speed -= braking * delta;
                     if (speed < -maxSpeed/2) speed = -maxSpeed/2;
                 }
 
-                // اصطکاک
                 if (!touchState.gas && !touchState.brake) {
                     speed *= (1 - delta * 2);
                     if (Math.abs(speed) < 0.1) speed = 0;
                 }
 
-                // حرکت
                 if (Math.abs(speed) > 0.1) {
                     carBody.velocity.x = forward.x * speed;
                     carBody.velocity.z = forward.z * speed;
@@ -387,38 +328,27 @@
                     carBody.velocity.z = 0;
                 }
 
-                // فرمان
                 if (Math.abs(speed) > 0.5) {
                     const turn = turnSpeed * (speed / maxSpeed) * 1.2;
-                    if (touchState.left) {
-                        carBody.angularVelocity.y = turn;
-                    } else if (touchState.right) {
-                        carBody.angularVelocity.y = -turn;
-                    } else {
-                        carBody.angularVelocity.y *= 0.9;
-                    }
+                    if (touchState.left) carBody.angularVelocity.y = turn;
+                    else if (touchState.right) carBody.angularVelocity.y = -turn;
+                    else carBody.angularVelocity.y *= 0.9;
                 } else {
                     carBody.angularVelocity.y *= 0.9;
                 }
 
-                // محدود کردن چرخش
                 carBody.angularVelocity.y = Math.max(-3, Math.min(3, carBody.angularVelocity.y));
 
-                // ===== همگام‌سازی =====
                 carMesh.position.copy(carBody.position);
                 carMesh.position.y += 0.2;
                 carMesh.quaternion.copy(carBody.quaternion);
 
-                // ===== دوربین =====
                 const camOffset = new THREE.Vector3(0, 2.8, 5.5);
-                const rotQuat = carMesh.quaternion.clone();
-                camOffset.applyQuaternion(rotQuat);
-                
+                camOffset.applyQuaternion(carMesh.quaternion);
                 const targetPos = carMesh.position.clone().add(camOffset);
                 camera.position.lerp(targetPos, 0.08);
                 camera.lookAt(carMesh.position);
 
-                // ===== نمایش سرعت =====
                 const speedKmh = Math.abs(speed * 3.6).toFixed(0);
                 document.getElementById('speed-display').textContent = `🚗 ${speedKmh} km/h`;
             }
@@ -429,7 +359,7 @@
 
         animate(0);
 
-        // ===== مدیریت ریسایز =====
+        // ===== ریسایز =====
         function resize() {
             const w = window.innerWidth;
             const h = window.innerHeight;
@@ -437,13 +367,8 @@
             camera.updateProjectionMatrix();
             renderer.setSize(w, h);
         }
-
         window.addEventListener('resize', resize);
-        window.addEventListener('orientationchange', () => {
-            setTimeout(resize, 300);
-        });
-
-        // جلوگیری از اسکرول
+        window.addEventListener('orientationchange', () => setTimeout(resize, 300));
         document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
     </script>
 </body>
